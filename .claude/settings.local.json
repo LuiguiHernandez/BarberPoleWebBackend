@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:/Users/USER/AppData/Local/Programs/Python/Python313/python.exe\" -m pip install bcrypt python-jose)",
+      "Bash(C:/Users/USER/AppData/Local/Programs/Python/Python313/python.exe -c ' *)",
+      "Bash(npm run *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\USER\\Downloads\\barberpole-backend"
+    ]
+  }
+}
