@@ -53,7 +53,7 @@ app.add_middleware(
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
+app.include_router(auth_router, prefix="/api/auth")
 app.include_router(citas_router)
 app.include_router(negocio_router)
 app.include_router(servicios_router)
