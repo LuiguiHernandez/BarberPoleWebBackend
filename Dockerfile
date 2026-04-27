@@ -18,9 +18,9 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Instalamos libpq5 (librería de runtime para Postgres) y curl para el healthcheck
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    curl \
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /app/uploads
