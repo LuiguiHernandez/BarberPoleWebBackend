@@ -24,8 +24,13 @@ from routers.webhooks import router as webhook_router
 
 Base.metadata.create_all(bind=engine)
 
+def custom_generate_unique_id(route: APIRoute):
+    # Esto hace que el ID sea solo "login" o "register" en lugar de nombres largos
+    return f"{route.name}"
+
 app = FastAPI(
     title="BarberPole API",
+    generate_unique_id_function=custom_generate_unique_id,
     description="Backend completo para gestión de barberías",
     version="2.0.0",
     docs_url="/docs",
