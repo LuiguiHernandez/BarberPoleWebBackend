@@ -4,7 +4,7 @@ from typing import Optional
 
 class Settings(BaseSettings):
     # Base de datos
-    DATABASE_URL = "postgresql://luigui:servorax_pass_2026@db:5432/servorax_db"
+    DATABASE_URL = str
 
     # Seguridad
     SECRET_KEY: str = "cambia-esta-clave"
