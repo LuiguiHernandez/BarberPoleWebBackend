@@ -1,16 +1,16 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import os
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 
 from core.config import settings
 from core.database import engine, Base
 
-
+# Importación de modelos para creación de tablas
 from models import Usuario, Negocio, Servicio, Barbero, Horario, Cliente, Cita, Conversacion, Mensaje, LunaIndicacion
 
+# Routers
 from routers.auth import router as auth_router
 from routers.citas import router as citas_router
 from routers.negocio import router as negocio_router
@@ -23,10 +23,10 @@ from routers.conversaciones import router as conversaciones_router
 from routers.luna import router as luna_router
 from routers.webhooks import router as webhook_router
 
+# Crear tablas en Postgres
 Base.metadata.create_all(bind=engine)
 
 def custom_generate_unique_id(route: APIRoute):
-    # Esto hace que el ID sea solo "login" o "register" en lugar de nombres largos
     return f"{route.name}"
 
 app = FastAPI(
@@ -34,38 +34,43 @@ app = FastAPI(
     generate_unique_id_function=custom_generate_unique_id,
     description="Backend completo para gestión de barberías",
     version="2.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
 )
+
+# --- CONFIGURACIÓN DE CORS (UNIFICADA) ---
+origins = [
+    "http://167.172.145.102",      # Producción
+    "http://167.172.145.102:80",   # Producción puerto 80
+    "http://localhost:5173",       # Desarrollo Local
+    "http://localhost:5174",
+    "http://localhost:5175",
+    "http://localhost:3000",
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        settings.FRONTEND_URL,
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Configuración de archivos estáticos
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+# --- INCLUSIÓN DE ROUTERS CON PREFIJO /API ---
+# Aseguramos que todos coincidan con las llamadas de Axios en el Front
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
-app.include_router(citas_router)
-app.include_router(negocio_router)
-app.include_router(servicios_router)
-app.include_router(barberos_router)
-app.include_router(horarios_router)
-app.include_router(informes_router)
-app.include_router(lealtad_router)
-app.include_router(conversaciones_router)
-app.include_router(luna_router)
-app.include_router(webhook_router)
-
+app.include_router(citas_router, prefix="/api/citas", tags=["Citas"])
+app.include_router(negocio_router, prefix="/api/negocio", tags=["Negocio"])
+app.include_router(servicios_router, prefix="/api/servicios", tags=["Servicios"])
+app.include_router(barberos_router, prefix="/api/barberos", tags=["Barberos"])
+app.include_router(horarios_router, prefix="/api/horarios", tags=["Horarios"])
+app.include_router(informes_router, prefix="/api/informes", tags=["Informes"])
+app.include_router(lealtad_router, prefix="/api/lealtad", tags=["Lealtad"])
+app.include_router(conversaciones_router, prefix="/api/conversaciones", tags=["Conversaciones"])
+app.include_router(luna_router, prefix="/api/luna", tags=["Luna"])
+app.include_router(webhook_router, prefix="/api/webhooks", tags=["Webhooks"])
 
 @app.get("/", tags=["Health"])
 def root():
@@ -76,24 +81,6 @@ def root():
         "docs": "/docs",
     }
 
-
-
 @app.get("/health", tags=["Health"])
 def health():
     return {"status": "healthy"}
-
-origins = [
-    "http://167.172.145.102",      # Tu IP de producción
-    "http://167.172.145.102:80",   # Por si acaso el navegador lo marca con puerto
-    "http://localhost:5173",       # Para cuando programes en tu PC local
-    "http://localhost:3000",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,           # Permite estos orígenes
-    allow_credentials=True,
-    allow_methods=["*"],             # Permite todos los métodos (GET, POST, etc.)
-    allow_headers=["*"],             # Permite todos los headers (incluyendo Authorization)
-)
-
