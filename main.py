@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
+from fastapi.routing import APIRoute
 
 from core.config import settings
 from core.database import engine, Base
@@ -23,8 +24,13 @@ from routers.webhooks import router as webhook_router
 
 Base.metadata.create_all(bind=engine)
 
+def custom_generate_unique_id(route: APIRoute):
+    # Esto hace que el ID sea solo "login" o "register" en lugar de nombres largos
+    return f"{route.name}"
+
 app = FastAPI(
     title="BarberPole API",
+    generate_unique_id_function=custom_generate_unique_id,
     description="Backend completo para gestión de barberías",
     version="2.0.0",
     docs_url="/docs",
@@ -47,17 +53,17 @@ app.add_middleware(
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-app.include_router(auth_router)
-app.include_router(citas_router)
-app.include_router(negocio_router)
-app.include_router(servicios_router)
-app.include_router(barberos_router)
-app.include_router(horarios_router)
-app.include_router(informes_router)
-app.include_router(lealtad_router)
-app.include_router(conversaciones_router)
-app.include_router(luna_router)
-app.include_router(webhook_router)
+app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
+app.include_router(citas_router, prefix="/api/citas", tags=["Citas"])
+app.include_router(negocio_router, prefix="/api/negocio", tags=["Negocio"])
+app.include_router(servicios_router, prefix="/api/servicios", tags=["Servicios"])
+app.include_router(barberos_router, prefix="/api/barberos", tags=["Barberos"])
+app.include_router(horarios_router, prefix="/api/horarios", tags=["Horarios"])
+app.include_router(informes_router, prefix="/api/informes", tags=["Informes"])
+app.include_router(lealtad_router, prefix="/api/lealtad", tags=["Lealtad"])
+app.include_router(conversaciones_router, prefix="/api/conversaciones", tags=["Conversaciones"])
+app.include_router(luna_router, prefix="/api/luna", tags=["Luna"])
+app.include_router(webhook_router, prefix="/api/webhooks", tags=["Webhooks"])
 
 
 @app.get("/", tags=["Health"])
@@ -68,6 +74,7 @@ def root():
         "version": "2.0.0",
         "docs": "/docs",
     }
+
 
 
 @app.get("/health", tags=["Health"])
