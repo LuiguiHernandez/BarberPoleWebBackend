@@ -5,7 +5,7 @@ from core.security import get_current_user
 from services.auth_service import AuthService
 from schemas.all_schemas import LoginRequest, TokenResponse, RegisterRequest
 
-router = APIRouter(prefix="/api/auth", tags=["Auth"])
+router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 def get_service(db: Session = Depends(get_db)) -> AuthService:
