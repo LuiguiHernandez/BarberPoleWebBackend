@@ -1,23 +1,32 @@
-version: '3.8'
-
 services:
-  api:
-    build: .
-    container_name: barberpole-api
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: servorax-db
+    restart: always
+    environment:
+      POSTGRES_USER: luigui
+      POSTGRES_PASSWORD: servorax_pass_2026
+      POSTGRES_DB: servorax_db
+    ports:
+      - "5432:5432" # Para que DataGrip conecte vía SSH
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Tu API de FastAPI
+  backend:
+    build: 
+      context: ./BarberPoleWebBackend # Ajusta esta ruta si es necesario
+      dockerfile: Dockerfile
+    container_name: servorax-api
+    restart: always
+    depends_on:
+      - db
+    environment:
+      # Muy importante: Usamos 'db' como host porque Docker resuelve el nombre del servicio
+      DATABASE_URL: postgresql://luigui:servorax_pass_2026@db:5432/servorax_db
     ports:
       - "8000:8000"
-    volumes:
-      - ./uploads:/app/uploads
-      - ./barberpole.db:/app/barberpole.db
-    environment:
-      - DATABASE_URL=sqlite:///./barberpole.db
-      - ENVIRONMENT=production
-    env_file:
-      - .env
-    restart: unless-stopped
-    networks:
-      - barberpole-network
 
-networks:
-  barberpole-network:
-    driver: bridge
+volumes:
+  pgdata: # Tus datos persistentes
