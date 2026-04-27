@@ -4,7 +4,7 @@ from typing import Optional
 
 class Settings(BaseSettings):
     # Base de datos
-    DATABASE_URL = str
+    DATABASE_URL: str
 
     # Seguridad
     SECRET_KEY: str = "cambia-esta-clave"
