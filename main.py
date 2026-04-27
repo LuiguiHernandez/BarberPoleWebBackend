@@ -6,7 +6,8 @@ import os
 from core.config import settings
 from core.database import engine, Base
 
-import models.all_models  # noqa — registra todos los modelos en SQLAlchemy
+
+from models import Usuario, Negocio, Servicio, Barbero, Horario, Cliente, Cita, Conversacion, Mensaje, LunaIndicacion
 
 from routers.auth import router as auth_router
 from routers.citas import router as citas_router
