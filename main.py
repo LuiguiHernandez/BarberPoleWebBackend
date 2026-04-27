@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 
 from core.config import settings
@@ -80,3 +81,19 @@ def root():
 @app.get("/health", tags=["Health"])
 def health():
     return {"status": "healthy"}
+
+origins = [
+    "http://167.172.145.102",      # Tu IP de producción
+    "http://167.172.145.102:80",   # Por si acaso el navegador lo marca con puerto
+    "http://localhost:5173",       # Para cuando programes en tu PC local
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,           # Permite estos orígenes
+    allow_credentials=True,
+    allow_methods=["*"],             # Permite todos los métodos (GET, POST, etc.)
+    allow_headers=["*"],             # Permite todos los headers (incluyendo Authorization)
+)
+
