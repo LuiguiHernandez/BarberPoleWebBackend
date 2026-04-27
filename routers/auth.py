@@ -5,12 +5,12 @@ from core.security import get_current_user
 from services.auth_service import AuthService
 from schemas.all_schemas import LoginRequest, TokenResponse, RegisterRequest
 
-router = APIRouter()
+router = APIRouter(prefix="/api/auth")
 
 
 def get_service(db: Session = Depends(get_db)) -> AuthService:
     return AuthService(db)
-    
+
 
 @router.post("/register", response_model=TokenResponse)
 def register(data: RegisterRequest, service: AuthService = Depends(get_service)):
