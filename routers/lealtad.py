@@ -6,7 +6,7 @@ from core.security import get_current_user
 from services.lealtad_service import LealtadService
 from schemas.all_schemas import DarSelloRequest, LealtadResumen, ClienteResponse
 
-router = APIRouter(prefix="/api/lealtad", tags=["Lealtad"])
+router = APIRouter()
 
 
 def get_service(db: Session = Depends(get_db)) -> LealtadService:

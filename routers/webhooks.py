@@ -8,7 +8,7 @@ from repositories.luna_repository import LunaIndicacionRepository
 from repositories.negocio_repository import NegocioRepository
 from schemas.all_schemas import WebhookMensajeEntrante
 
-router = APIRouter(prefix="/api/webhooks", tags=["Webhooks"])
+router = APIRouter()
 
 
 def get_conv_service(db: Session = Depends(get_db)) -> ConversacionService:

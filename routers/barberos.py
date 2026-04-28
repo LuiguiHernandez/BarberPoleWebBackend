@@ -6,7 +6,7 @@ from core.security import get_current_user
 from services.barbero_service import BarberoService
 from schemas.all_schemas import BarberoCreate, BarberoUpdate, BarberoResponse
 
-router = APIRouter(prefix="/api/barberos", tags=["Barberos"])
+router = APIRouter()
 
 
 def get_service(db: Session = Depends(get_db)) -> BarberoService:

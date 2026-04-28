@@ -8,7 +8,7 @@ from schemas.all_schemas import (
     LunaStats, LunaIndicacionCreate, LunaIndicacionResponse, LunaIndicacionUpdate
 )
 
-router = APIRouter(prefix="/api/luna", tags=["Luna IA"])
+router = APIRouter()
 
 
 def get_service(db: Session = Depends(get_db)) -> LunaService:

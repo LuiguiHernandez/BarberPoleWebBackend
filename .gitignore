@@ -1,0 +1,15 @@
+# Secretos y variables de entorno
+.env
+.env.local
+
+# Base de datos local (SQLite)
+*.db
+*.sqlite3
+
+# Python (Cache y entornos virtuales)
+__pycache__/
+.venv/
+venv/
+
+# Archivos cargados por usuarios
+uploads/

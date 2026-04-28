@@ -6,7 +6,7 @@ from core.security import get_current_user
 from services.informe_service import InformeService
 from schemas.all_schemas import InformesStats
 
-router = APIRouter(prefix="/api/informes", tags=["Informes"])
+router = APIRouter()
 
 
 def get_service(db: Session = Depends(get_db)) -> InformeService:

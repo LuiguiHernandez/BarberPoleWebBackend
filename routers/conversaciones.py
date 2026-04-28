@@ -8,7 +8,7 @@ from schemas.all_schemas import (
     ConversacionResponse, MensajeResponse, EnviarMensajeRequest
 )
 
-router = APIRouter(prefix="/api/conversaciones", tags=["Conversaciones"])
+router = APIRouter()
 
 
 def get_service(db: Session = Depends(get_db)) -> ConversacionService:

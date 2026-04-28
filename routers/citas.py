@@ -6,7 +6,7 @@ from core.security import get_current_user
 from services.cita_service import CitaService
 from schemas.all_schemas import CitaCreate, CitaUpdate, CitaResponse, DashboardStats
 
-router = APIRouter(prefix="/api/citas", tags=["Citas"])
+router = APIRouter()
 
 
 def get_service(db: Session = Depends(get_db)) -> CitaService:

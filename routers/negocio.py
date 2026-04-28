@@ -5,7 +5,7 @@ from core.security import get_current_user
 from services.negocio_service import NegocioService
 from schemas.all_schemas import NegocioUpdate, NegocioResponse
 
-router = APIRouter(prefix="/api/negocio", tags=["Negocio"])
+router = APIRouter()
 
 
 def get_service(db: Session = Depends(get_db)) -> NegocioService:

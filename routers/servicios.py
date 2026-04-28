@@ -6,7 +6,7 @@ from core.security import get_current_user
 from services.servicio_service import ServicioService
 from schemas.all_schemas import ServicioCreate, ServicioUpdate, ServicioResponse
 
-router = APIRouter(prefix="/api/servicios", tags=["Servicios"])
+router = APIRouter()
 
 
 def get_service(db: Session = Depends(get_db)) -> ServicioService:
