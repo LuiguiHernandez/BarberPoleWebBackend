@@ -33,31 +33,35 @@ async def flujo_Carlos_completo(negocio_id: int, conversacion_id: int, telefono:
 @router.post("/whatsapp/{negocio_slug}")
 async def webhook_whatsapp(
     negocio_slug: str, 
-    payload: WebhookMensajeEntrante, 
+    payload: dict, 
     background_tasks: BackgroundTasks, 
     db: Session = Depends(get_db)
 ):
-    conv_service = ConversacionService(db)
+    # Evolution API manda la info dentro de 'data'
+    data = payload.get("data", {})
+    message = data.get("message", {})
+
+    # Extraemos los datos reales
+    # El teléfono viene en 'key.remoteJid' (ej: 573001234567@s.whatsapp.net)
+    remote_jid = data.get("key", {}).get("remoteJid", "")
+    telefono = remote_jid.split("@")[0]
+
+    nombre = data.get("pushName", "Cliente")
+
+    # El mensaje puede venir en 'conversation' o 'extendedTextMessage'
+    mensaje_texto = message.get("conversation") or \
+                    message.get("extendedTextMessage", {}).get("text", "")
     
-    # Procesa el mensaje entrante (Guarda en DB y asocia al negocio)
-    res = conv_service.procesar_webhook(
-        negocio_slug=negocio_slug, 
-        telefono=payload.telefono, 
-        nombre=payload.nombre, 
-        mensaje_texto=payload.mensaje
+    if not mensaje_texto:
+        return {"status": "ignored", "reason": "no_text_message"}
+
+    conv_service = ConversacionService(db)
+
+    # Aquí usamos las variables que acabamos de extraer
+    res = await conv_service.procesar_webhook(
+        negocio_slug=negocio_slug,
+        telefono=telefono,
+        nombre=nombre,
+        mensaje_texto=mensaje_texto
     )
-
-    negocio = res["negocio"]
-
-    # Si el negocio tiene a carlos encendida, disparamos la IA en Background
-    if negocio.carlos_activa:
-        background_tasks.add_task(
-            flujo_Carlos_completo,
-            negocio_id=negocio.id,
-            conversacion_id=res["conversacion_id"],
-            telefono=payload.telefono,
-            mensaje=payload.mensaje,
-            db=db
-        )
-
-    return {"ok": True, "conversacion_id": res["conversacion_id"]}
+    return {"status": "success", "data": res}

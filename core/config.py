@@ -1,6 +1,5 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict # Importa SettingsConfigDict
 from typing import Optional
-
 
 class Settings(BaseSettings):
     # Base de datos
@@ -28,8 +27,10 @@ class Settings(BaseSettings):
     APP_NAME: str = "BarberPole"
     DEBUG: bool = True
 
-    class Config:
-        env_file = ".env"
-
+    # --- LA CORRECCIÓN ESTÁ AQUÍ ---
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore"  # Esto le dice a Pydantic: "Si ves algo extra en el .env, ignóralo"
+    )
 
 settings = Settings()
