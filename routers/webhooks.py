@@ -1,87 +1,63 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 from core.database import get_db
-from core.config import settings
-from services.conversacion_service import ConversacionService
+from services.carlos_service import CarlosService
+from services.ai_engine import CarlosEngine
 from services.whatsapp_service import WhatsAppService
-from repositories.carlos_repository import CarlosIndicacionRepository
-from repositories.negocio_repository import NegocioRepository
+from services.conversacion_service import ConversacionService
 from schemas.all_schemas import WebhookMensajeEntrante
 
 router = APIRouter()
 
+# Función que procesa la IA en segundo plano
+async def flujo_Carlos_completo(negocio_id: int, conversacion_id: int, telefono: str, mensaje: str, db: Session):
+    carlos_service = CarlosService(db)
+    ai_engine = CarlosEngine()
+    ws_service = WhatsAppService()
 
-def get_conv_service(db: Session = Depends(get_db)) -> ConversacionService:
-    return ConversacionService(db)
+    # 1. Obtener contexto (Las reglas del Dashboard)
+    contexto = carlos_service.obtener_contexto_Carlos(negocio_id)
+    
+    # 2. Obtener historial (Contexto de la charla)
+    historial = carlos_service.obtener_historial_reciente(conversacion_id)
 
+    # 3. La IA genera la respuesta
+    respuesta_texto = await ai_engine.pedir_respuesta(contexto, historial, mensaje)
+
+    # 4. Guardar respuesta en el SaaS
+    carlos_service.msg_repo.save_message(conversacion_id, respuesta_texto, "Carlos")
+
+    # 5. Enviar a WhatsApp real vía Evolution API
+    await ws_service.enviar_mensaje(telefono, respuesta_texto)
 
 @router.post("/whatsapp/{negocio_slug}")
 async def webhook_whatsapp(
-    negocio_slug: str,
-    payload: WebhookMensajeEntrante,
-    service: ConversacionService = Depends(get_conv_service),
-    db: Session = Depends(get_db),
+    negocio_slug: str, 
+    payload: WebhookMensajeEntrante, 
+    background_tasks: BackgroundTasks, 
+    db: Session = Depends(get_db)
 ):
-    result = service.procesar_webhook(
-        negocio_slug=negocio_slug,
-        telefono=payload.telefono,
-        nombre=payload.nombre,
-        mensaje_texto=payload.mensaje,
+    conv_service = ConversacionService(db)
+    
+    # Procesa el mensaje entrante (Guarda en DB y asocia al negocio)
+    res = conv_service.procesar_webhook(
+        negocio_slug=negocio_slug, 
+        telefono=payload.telefono, 
+        nombre=payload.nombre, 
+        mensaje_texto=payload.mensaje
     )
 
-    negocio = result["negocio"]
-    if negocio.Carlos_activa:
-        Carlos_repo = CarlosIndicacionRepository(db)
-        indicaciones = Carlos_repo.get_activas(negocio.id)
+    negocio = res["negocio"]
 
-        contexto = {
-            "data": {
-                "key": {
-                    "remoteJid": f"{payload.telefono}@s.whatsapp.net",
-                    "fromMe": False,
-                    "id": f"barberpole_{result['conversacion_id']}",
-                },
-                "message": {"conversation": payload.mensaje},
-                "pushName": payload.nombre or payload.telefono,
-                "instance": settings.EVOLUTION_INSTANCE,
-            },
-            "barberpole": {
-                "negocio": negocio.nombre,
-                "negocio_slug": negocio_slug,
-                "conversacion_id": result["conversacion_id"],
-                "indicaciones": [i.texto for i in indicaciones],
-            },
-        }
+    # Si el negocio tiene a carlos encendida, disparamos la IA en Background
+    if negocio.carlos_activa:
+        background_tasks.add_task(
+            flujo_Carlos_completo,
+            negocio_id=negocio.id,
+            conversacion_id=res["conversacion_id"],
+            telefono=payload.telefono,
+            mensaje=payload.mensaje,
+            db=db
+        )
 
-        import httpx
-        try:
-            async with httpx.AsyncClient() as client:
-                await client.post(settings.N8N_WEBHOOK_URL, json=contexto, timeout=5)
-        except Exception:
-            pass
-
-    return {"ok": True, "conversacion_id": result["conversacion_id"]}
-
-
-@router.post("/carlos-respuesta")
-async def webhook_Carlos_respuesta(
-    request: Request,
-    service: ConversacionService = Depends(get_conv_service),
-):
-    data = await request.json()
-    conversacion_id = data.get("conversacion_id")
-    respuesta = data.get("respuesta")
-    telefono = data.get("telefono")
-
-    if not conversacion_id or not respuesta:
-        raise HTTPException(status_code=400, detail="Faltan campos")
-
-    conv = service.guardar_respuesta_Carlos(conversacion_id, respuesta, telefono)
-
-    whatsapp = WhatsAppService()
-    try:
-        await whatsapp.enviar_mensaje(telefono or conv.telefono, respuesta)
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Error enviando WhatsApp: {str(e)}")
-
-    return {"ok": True}
+    return {"ok": True, "conversacion_id": res["conversacion_id"]}

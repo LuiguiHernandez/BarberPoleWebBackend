@@ -73,8 +73,8 @@ class Negocio(Base):
     notif_recordatorio = Column(Boolean, default=True)
     notif_cancelacion = Column(Boolean, default=True)
     # Carlos IA
-    Carlos_activa = Column(Boolean, default=False)
-    Carlos_recordatorios_activos = Column(Boolean, default=True)
+    carlos_activa = Column(Boolean, default=False)
+    carlos_recordatorios_activos = Column(Boolean, default=True)
 
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
     actualizado_en = Column(DateTime(timezone=True), onupdate=func.now())
@@ -85,7 +85,7 @@ class Negocio(Base):
     clientes = relationship("Cliente", back_populates="negocio", cascade="all, delete")
     citas = relationship("Cita", back_populates="negocio", cascade="all, delete")
     horarios = relationship("Horario", back_populates="negocio", cascade="all, delete")
-    Carlos_indicaciones = relationship("CarlosIndicacion", back_populates="negocio", cascade="all, delete")
+    carlos_indicaciones = relationship("CarlosIndicacion", back_populates="negocio", cascade="all, delete")
 
 
 # ─── SERVICIO ─────────────────────────────────────────────────────────────────
