@@ -4,7 +4,7 @@ from core.database import get_db
 from core.config import settings
 from services.conversacion_service import ConversacionService
 from services.whatsapp_service import WhatsAppService
-from repositories.luna_repository import LunaIndicacionRepository
+from repositories.Carlos_repository import CarlosIndicacionRepository
 from repositories.negocio_repository import NegocioRepository
 from schemas.all_schemas import WebhookMensajeEntrante
 
@@ -30,9 +30,9 @@ async def webhook_whatsapp(
     )
 
     negocio = result["negocio"]
-    if negocio.luna_activa:
-        luna_repo = LunaIndicacionRepository(db)
-        indicaciones = luna_repo.get_activas(negocio.id)
+    if negocio.Carlos_activa:
+        Carlos_repo = CarlosIndicacionRepository(db)
+        indicaciones = Carlos_repo.get_activas(negocio.id)
 
         contexto = {
             "data": {
@@ -63,8 +63,8 @@ async def webhook_whatsapp(
     return {"ok": True, "conversacion_id": result["conversacion_id"]}
 
 
-@router.post("/luna-respuesta")
-async def webhook_luna_respuesta(
+@router.post("/Carlos-respuesta")
+async def webhook_Carlos_respuesta(
     request: Request,
     service: ConversacionService = Depends(get_conv_service),
 ):
@@ -76,7 +76,7 @@ async def webhook_luna_respuesta(
     if not conversacion_id or not respuesta:
         raise HTTPException(status_code=400, detail="Faltan campos")
 
-    conv = service.guardar_respuesta_luna(conversacion_id, respuesta, telefono)
+    conv = service.guardar_respuesta_Carlos(conversacion_id, respuesta, telefono)
 
     whatsapp = WhatsAppService()
     try:

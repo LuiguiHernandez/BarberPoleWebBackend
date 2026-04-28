@@ -103,7 +103,7 @@ class ConversacionService:
         self.db.commit()
         return {"ok": True, "conversacion_id": conv.id, "negocio": negocio}
 
-    def guardar_respuesta_luna(
+    def guardar_respuesta_Carlos(
         self, conversacion_id: int, respuesta: str, telefono: Optional[str]
     ) -> Conversacion:
         conv = self.repo.get_by_id(conversacion_id)
@@ -113,7 +113,7 @@ class ConversacionService:
         mensaje = Mensaje(
             conversacion_id=conversacion_id,
             contenido=respuesta,
-            enviado_por="luna",
+            enviado_por="Carlos",
         )
         self.db.add(mensaje)
         conv.ultimo_mensaje = respuesta

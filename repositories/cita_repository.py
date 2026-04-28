@@ -112,9 +112,9 @@ class CitaRepository(BaseRepository[Cita]):
             .all()
         )
 
-    def count_creadas_por_luna(self, negocio_id: int) -> int:
+    def count_creadas_por_Carlos(self, negocio_id: int) -> int:
         return (
             self.db.query(Cita)
-            .filter(Cita.negocio_id == negocio_id, Cita.creada_por_luna == True)
+            .filter(Cita.negocio_id == negocio_id, Cita.creada_por_Carlos == True)
             .count()
         )

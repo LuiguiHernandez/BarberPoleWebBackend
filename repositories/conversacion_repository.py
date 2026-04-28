@@ -53,13 +53,13 @@ class MensajeRepository(BaseRepository[Mensaje]):
         ).update({"leido": True})
         self.db.commit()
 
-    def count_luna_by_negocio(self, negocio_id: int) -> int:
+    def count_Carlos_by_negocio(self, negocio_id: int) -> int:
         return (
             self.db.query(Mensaje)
             .join(Conversacion)
             .filter(
                 Conversacion.negocio_id == negocio_id,
-                Mensaje.enviado_por == "luna",
+                Mensaje.enviado_por == "Carlos",
             )
             .count()
         )

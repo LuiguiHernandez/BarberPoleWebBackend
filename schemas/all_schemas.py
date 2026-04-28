@@ -45,8 +45,8 @@ class NegocioUpdate(BaseModel):
     notif_nueva_cita: Optional[bool] = None
     notif_recordatorio: Optional[bool] = None
     notif_cancelacion: Optional[bool] = None
-    luna_activa: Optional[bool] = None
-    luna_recordatorios_activos: Optional[bool] = None
+    Carlos_activa: Optional[bool] = None
+    Carlos_recordatorios_activos: Optional[bool] = None
 
 class NegocioResponse(BaseModel):
     id: int
@@ -69,8 +69,8 @@ class NegocioResponse(BaseModel):
     notif_nueva_cita: bool
     notif_recordatorio: bool
     notif_cancelacion: bool
-    luna_activa: bool
-    luna_recordatorios_activos: bool
+    Carlos_activa: bool
+    Carlos_recordatorios_activos: bool
 
     class Config:
         from_attributes = True
@@ -206,7 +206,7 @@ class CitaResponse(BaseModel):
     precio: float
     estado: EstadoCita
     notas: Optional[str]
-    creada_por_luna: bool
+    creada_por_Carlos: bool
     cliente: Optional[CitaClienteResponse]
     barbero: Optional[BarberoResponse]
     servicio: Optional[ServicioResponse]
@@ -255,7 +255,7 @@ class ConversacionResponse(BaseModel):
     ultimo_mensaje: Optional[str]
     ultimo_mensaje_en: Optional[datetime]
     no_leidos: int
-    manejada_por_luna: bool
+    manejada_por_Carlos: bool
 
     class Config:
         from_attributes = True
@@ -274,17 +274,17 @@ class EnviarMensajeRequest(BaseModel):
     contenido: str
 
 
-# ─── LUNA IA ──────────────────────────────────────────────────────────────────
+# ─── Carlos IA ──────────────────────────────────────────────────────────────────
 
-class LunaStats(BaseModel):
+class CarlosStats(BaseModel):
     mensajes_respondidos: int
-    citas_creadas_por_luna: int
+    citas_creadas_por_Carlos: int
     tasa_respuesta: float
 
-class LunaIndicacionCreate(BaseModel):
+class CarlosIndicacionCreate(BaseModel):
     texto: str
 
-class LunaIndicacionResponse(BaseModel):
+class CarlosIndicacionResponse(BaseModel):
     id: int
     texto: str
     activa: bool
@@ -293,7 +293,7 @@ class LunaIndicacionResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class LunaIndicacionUpdate(BaseModel):
+class CarlosIndicacionUpdate(BaseModel):
     activa: bool
 
 
