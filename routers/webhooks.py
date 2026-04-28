@@ -4,7 +4,7 @@ from core.database import get_db
 from core.config import settings
 from services.conversacion_service import ConversacionService
 from services.whatsapp_service import WhatsAppService
-from repositories.Carlos_repository import CarlosIndicacionRepository
+from repositories.carlos_repository import CarlosIndicacionRepository
 from repositories.negocio_repository import NegocioRepository
 from schemas.all_schemas import WebhookMensajeEntrante
 
@@ -63,7 +63,7 @@ async def webhook_whatsapp(
     return {"ok": True, "conversacion_id": result["conversacion_id"]}
 
 
-@router.post("/Carlos-respuesta")
+@router.post("/carlos-respuesta")
 async def webhook_Carlos_respuesta(
     request: Request,
     service: ConversacionService = Depends(get_conv_service),

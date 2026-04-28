@@ -8,7 +8,7 @@ from core.config import settings
 from core.database import engine, Base
 
 # Importación de modelos para creación de tablas
-from models import Usuario, Negocio, Servicio, Barbero, Horario, Cliente, Cita, Conversacion, Mensaje, LunaIndicacion
+from models import Usuario, Negocio, Servicio, Barbero, Horario, Cliente, Cita, Conversacion, Mensaje, CarlosIndicacion
 
 # Routers
 from routers.auth import router as auth_router
@@ -20,7 +20,7 @@ from routers.horarios import router as horarios_router
 from routers.informes import router as informes_router
 from routers.lealtad import router as lealtad_router
 from routers.conversaciones import router as conversaciones_router
-from routers.luna import router as luna_router
+from routers.carlos import router as carlos_router
 from routers.webhooks import router as webhook_router
 
 # Crear tablas en Postgres
@@ -69,7 +69,7 @@ app.include_router(horarios_router, prefix="/api/horarios", tags=["Horarios"])
 app.include_router(informes_router, prefix="/api/informes", tags=["Informes"])
 app.include_router(lealtad_router, prefix="/api/lealtad", tags=["Lealtad"])
 app.include_router(conversaciones_router, prefix="/api/conversaciones", tags=["Conversaciones"])
-app.include_router(luna_router, prefix="/api/luna", tags=["Luna"])
+app.include_router(carlos_router, prefix="/api/carlos", tags=["Carlos"])
 app.include_router(webhook_router, prefix="/api/webhooks", tags=["Webhooks"])
 
 @app.get("/", tags=["Health"])

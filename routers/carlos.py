@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from core.database import get_db
 from core.security import get_current_user
-from services.Carlos_service import CarlosService
+from services.carlos_service import CarlosService
 from schemas.all_schemas import (
     CarlosStats, CarlosIndicacionCreate, CarlosIndicacionResponse, CarlosIndicacionUpdate
 )

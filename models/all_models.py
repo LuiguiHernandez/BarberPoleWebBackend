@@ -72,9 +72,9 @@ class Negocio(Base):
     notif_nueva_cita = Column(Boolean, default=True)
     notif_recordatorio = Column(Boolean, default=True)
     notif_cancelacion = Column(Boolean, default=True)
-    # Luna IA
-    luna_activa = Column(Boolean, default=False)
-    luna_recordatorios_activos = Column(Boolean, default=True)
+    # Carlos IA
+    Carlos_activa = Column(Boolean, default=False)
+    Carlos_recordatorios_activos = Column(Boolean, default=True)
 
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
     actualizado_en = Column(DateTime(timezone=True), onupdate=func.now())
@@ -85,7 +85,7 @@ class Negocio(Base):
     clientes = relationship("Cliente", back_populates="negocio", cascade="all, delete")
     citas = relationship("Cita", back_populates="negocio", cascade="all, delete")
     horarios = relationship("Horario", back_populates="negocio", cascade="all, delete")
-    luna_indicaciones = relationship("LunaIndicacion", back_populates="negocio", cascade="all, delete")
+    Carlos_indicaciones = relationship("CarlosIndicacion", back_populates="negocio", cascade="all, delete")
 
 
 # ─── SERVICIO ─────────────────────────────────────────────────────────────────
@@ -182,7 +182,7 @@ class Cita(Base):
     notas = Column(Text)
 
     # Origen de la cita
-    creada_por_luna = Column(Boolean, default=False)
+    creada_por_Carlos = Column(Boolean, default=False)
     creada_manualmente = Column(Boolean, default=False)
 
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
@@ -207,7 +207,7 @@ class Conversacion(Base):
     ultimo_mensaje = Column(Text)
     ultimo_mensaje_en = Column(DateTime(timezone=True))
     no_leidos = Column(Integer, default=0)
-    manejada_por_luna = Column(Boolean, default=True)
+    manejada_por_Carlos = Column(Boolean, default=True)
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
 
     cliente = relationship("Cliente", back_populates="conversaciones")
@@ -220,17 +220,17 @@ class Mensaje(Base):
     id = Column(Integer, primary_key=True, index=True)
     conversacion_id = Column(Integer, ForeignKey("conversaciones.id"), nullable=False)
     contenido = Column(Text, nullable=False)
-    enviado_por = Column(String(20), default="cliente")  # "cliente" | "luna" | "barberia"
+    enviado_por = Column(String(20), default="cliente")  # "cliente" | "Carlos" | "barberia"
     enviado_en = Column(DateTime(timezone=True), server_default=func.now())
     leido = Column(Boolean, default=False)
 
     conversacion = relationship("Conversacion", back_populates="mensajes")
 
 
-# ─── LUNA IA - INDICACIONES ───────────────────────────────────────────────────
+# ─── Carlos IA - INDICACIONES ───────────────────────────────────────────────────
 
-class LunaIndicacion(Base):
-    __tablename__ = "luna_indicaciones"
+class CarlosIndicacion(Base):
+    __tablename__ = "Carlos_indicaciones"
 
     id = Column(Integer, primary_key=True, index=True)
     negocio_id = Column(Integer, ForeignKey("negocios.id"), nullable=False)
@@ -238,4 +238,4 @@ class LunaIndicacion(Base):
     activa = Column(Boolean, default=True)
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
 
-    negocio = relationship("Negocio", back_populates="luna_indicaciones")
+    negocio = relationship("Negocio", back_populates="Carlos_indicaciones")

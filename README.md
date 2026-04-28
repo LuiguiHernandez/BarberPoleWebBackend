@@ -55,7 +55,7 @@ barberpole-backend/
     ├── auth.py              # Login / Register
     ├── citas.py             # Citas + Dashboard stats
     ├── config.py            # Negocio, Servicios, Barberos, Horarios
-    └── otros.py             # Informes, Lealtad, Conversaciones, Luna IA, Webhooks
+    └── otros.py             # Informes, Lealtad, Conversaciones, Carlos IA, Webhooks
 ```
 
 ---
@@ -112,18 +112,18 @@ barberpole-backend/
 | GET | `/api/conversaciones/{id}/mensajes` | Mensajes de un chat |
 | POST | `/api/conversaciones/{id}/responder` | Responder por WhatsApp |
 
-### Luna IA
+### Carlos IA
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET | `/api/luna/stats` | Estadísticas de Luna |
-| GET/POST | `/api/luna/indicaciones` | Ver/agregar indicaciones |
-| PUT/DELETE | `/api/luna/indicaciones/{id}` | Activar/desactivar/eliminar |
+| GET | `/api/carlos/stats` | Estadísticas de Carlos |
+| GET/POST | `/api/carlos/indicaciones` | Ver/agregar indicaciones |
+| PUT/DELETE | `/api/carlos/indicaciones/{id}` | Activar/desactivar/eliminar |
 
 ### Webhooks (n8n ↔ Evolution API)
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | POST | `/api/webhooks/whatsapp/{slug}` | Recibe mensajes de n8n |
-| POST | `/api/webhooks/luna-respuesta` | Recibe respuesta IA de n8n |
+| POST | `/api/webhooks/carlos-respuesta` | Recibe respuesta IA de n8n |
 
 ---
 
@@ -144,11 +144,11 @@ Backend guarda mensaje + envía contexto a n8n
     ↓
 n8n llama a Claude/OpenAI con el contexto
     ↓
-POST /api/webhooks/luna-respuesta
+POST /api/webhooks/carlos-respuesta
     ↓
 Backend guarda respuesta + envía por Evolution API
     ↓
-Cliente recibe respuesta de Luna IA por WhatsApp
+Cliente recibe respuesta de Carlos IA por WhatsApp
 ```
 
 ### Configurar en n8n:
@@ -156,7 +156,7 @@ Cliente recibe respuesta de Luna IA por WhatsApp
 1. **Webhook node** que reciba de Evolution API
 2. **HTTP Request node** → `POST http://localhost:8000/api/webhooks/whatsapp/optus-barber`
 3. **AI node** (Claude/OpenAI) con el contexto del negocio
-4. **HTTP Request node** → `POST http://localhost:8000/api/webhooks/luna-respuesta`
+4. **HTTP Request node** → `POST http://localhost:8000/api/webhooks/carlos-respuesta`
 
 ---
 

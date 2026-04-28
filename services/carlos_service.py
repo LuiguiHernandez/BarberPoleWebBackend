@@ -2,7 +2,7 @@ from typing import List
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from models.all_models import CarlosIndicacion
-from repositories.Carlos_repository import CarlosIndicacionRepository
+from repositories.carlos_repository import CarlosIndicacionRepository
 from repositories.conversacion_repository import MensajeRepository
 from repositories.cita_repository import CitaRepository
 from repositories.negocio_repository import NegocioRepository
