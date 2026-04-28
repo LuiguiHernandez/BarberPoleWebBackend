@@ -43,7 +43,6 @@ class NegocioUpdate(BaseModel):
     notif_nueva_cita: Optional[bool] = None
     notif_recordatorio: Optional[bool] = None
     notif_cancelacion: Optional[bool] = None
-    # CORREGIDO: Minúsculas para coincidir con el modelo
     carlos_activa: Optional[bool] = None
     carlos_recordatorios_activos: Optional[bool] = None
 
@@ -68,7 +67,6 @@ class NegocioResponse(BaseModel):
     notif_nueva_cita: bool
     notif_recordatorio: bool
     notif_cancelacion: bool
-    # CORREGIDO: Minúsculas para coincidir con el modelo
     carlos_activa: bool
     carlos_recordatorios_activos: bool
 
