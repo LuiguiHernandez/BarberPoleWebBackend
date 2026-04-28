@@ -230,7 +230,7 @@ class Mensaje(Base):
 # ─── Carlos IA - INDICACIONES ───────────────────────────────────────────────────
 
 class CarlosIndicacion(Base):
-    __tablename__ = "Carlos_indicaciones"
+    __tablename__ = "carlos_indicaciones"
 
     id = Column(Integer, primary_key=True, index=True)
     negocio_id = Column(Integer, ForeignKey("negocios.id"), nullable=False)
@@ -238,4 +238,4 @@ class CarlosIndicacion(Base):
     activa = Column(Boolean, default=True)
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
 
-    negocio = relationship("Negocio", back_populates="Carlos_indicaciones")
+    negocio = relationship("Negocio", back_populates="carlos_indicaciones")
