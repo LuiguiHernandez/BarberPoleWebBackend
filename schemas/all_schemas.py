@@ -3,7 +3,6 @@ from typing import Optional, List
 from datetime import datetime
 from models.all_models import EstadoCita, DiaSemana
 
-
 # ─── AUTH ─────────────────────────────────────────────────────────────────────
 
 class LoginRequest(BaseModel):
@@ -22,7 +21,6 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
     nombre_negocio: str
-
 
 # ─── NEGOCIO ──────────────────────────────────────────────────────────────────
 
@@ -45,8 +43,9 @@ class NegocioUpdate(BaseModel):
     notif_nueva_cita: Optional[bool] = None
     notif_recordatorio: Optional[bool] = None
     notif_cancelacion: Optional[bool] = None
-    Carlos_activa: Optional[bool] = None
-    Carlos_recordatorios_activos: Optional[bool] = None
+    # CORREGIDO: Minúsculas para coincidir con el modelo
+    carlos_activa: Optional[bool] = None
+    carlos_recordatorios_activos: Optional[bool] = None
 
 class NegocioResponse(BaseModel):
     id: int
@@ -69,12 +68,12 @@ class NegocioResponse(BaseModel):
     notif_nueva_cita: bool
     notif_recordatorio: bool
     notif_cancelacion: bool
-    Carlos_activa: bool
-    Carlos_recordatorios_activos: bool
+    # CORREGIDO: Minúsculas para coincidir con el modelo
+    carlos_activa: bool
+    carlos_recordatorios_activos: bool
 
     class Config:
         from_attributes = True
-
 
 # ─── SERVICIO ─────────────────────────────────────────────────────────────────
 
@@ -103,7 +102,6 @@ class ServicioResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 # ─── BARBERO ──────────────────────────────────────────────────────────────────
 
 class BarberoCreate(BaseModel):
@@ -129,7 +127,6 @@ class BarberoResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 # ─── HORARIO ──────────────────────────────────────────────────────────────────
 
 class HorarioUpdate(BaseModel):
@@ -149,7 +146,6 @@ class HorarioResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
 
 # ─── CLIENTE ──────────────────────────────────────────────────────────────────
 
@@ -171,7 +167,6 @@ class ClienteResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 # ─── CITA ─────────────────────────────────────────────────────────────────────
 
 class CitaCreate(BaseModel):
@@ -180,7 +175,6 @@ class CitaCreate(BaseModel):
     servicio_id: Optional[int] = None
     fecha_hora: datetime
     notas: Optional[str] = None
-    # Si el cliente no existe, crear con estos datos
     cliente_nombre: Optional[str] = None
     cliente_telefono: Optional[str] = None
 
@@ -206,14 +200,13 @@ class CitaResponse(BaseModel):
     precio: float
     estado: EstadoCita
     notas: Optional[str]
-    creada_por_Carlos: bool
+    creada_por_Carlos: bool # Coincide con tu modelo (C mayúscula)
     cliente: Optional[CitaClienteResponse]
     barbero: Optional[BarberoResponse]
     servicio: Optional[ServicioResponse]
 
     class Config:
         from_attributes = True
-
 
 # ─── DASHBOARD STATS ──────────────────────────────────────────────────────────
 
@@ -222,7 +215,6 @@ class DashboardStats(BaseModel):
     ingresos_hoy: float
     citas_semana: int
     confirmadas_hoy: int
-
 
 # ─── INFORMES ─────────────────────────────────────────────────────────────────
 
@@ -234,7 +226,6 @@ class InformesStats(BaseModel):
     citas_por_estado: dict
     ingresos_por_barbero: List[dict]
 
-
 # ─── LEALTAD ──────────────────────────────────────────────────────────────────
 
 class DarSelloRequest(BaseModel):
@@ -245,7 +236,6 @@ class LealtadResumen(BaseModel):
     sellos_dados_hoy: int
     recompensas_canjeadas_total: int
 
-
 # ─── CONVERSACIONES ───────────────────────────────────────────────────────────
 
 class ConversacionResponse(BaseModel):
@@ -255,7 +245,7 @@ class ConversacionResponse(BaseModel):
     ultimo_mensaje: Optional[str]
     ultimo_mensaje_en: Optional[datetime]
     no_leidos: int
-    manejada_por_Carlos: bool
+    manejada_por_Carlos: bool # Coincide con tu modelo (C mayúscula)
 
     class Config:
         from_attributes = True
@@ -272,7 +262,6 @@ class MensajeResponse(BaseModel):
 
 class EnviarMensajeRequest(BaseModel):
     contenido: str
-
 
 # ─── Carlos IA ──────────────────────────────────────────────────────────────────
 
@@ -295,7 +284,6 @@ class CarlosIndicacionResponse(BaseModel):
 
 class CarlosIndicacionUpdate(BaseModel):
     activa: bool
-
 
 # ─── WEBHOOK WhatsApp (desde n8n/Evolution API) ───────────────────────────────
 
