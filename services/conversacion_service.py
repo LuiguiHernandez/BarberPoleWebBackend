@@ -65,20 +65,22 @@ class ConversacionService:
         telefono: str,
         nombre: Optional[str],
         mensaje_texto: str,
+        enviado_por_mi: bool = False,
     ) -> dict:
         negocio = self.negocio_repo.get_by_slug(negocio_slug)
         if not negocio:
             raise HTTPException(status_code=404, detail="Negocio no encontrado")
 
+        # Limpiar el teléfono para evitar duplicados por formato
+        telefono = telefono.strip()
+
         conv = self.repo.get_by_telefono(negocio.id, telefono)
+        
         if not conv:
+            # Lógica de creación de cliente y conversación (se mantiene igual)
             cliente = self.cliente_repo.get_by_telefono(negocio.id, telefono)
             if not cliente and nombre:
-                cliente = Cliente(
-                    negocio_id=negocio.id,
-                    nombre=nombre,
-                    telefono=telefono,
-                )
+                cliente = Cliente(negocio_id=negocio.id, nombre=nombre, telefono=telefono)
                 self.db.add(cliente)
                 self.db.flush()
 
@@ -91,15 +93,25 @@ class ConversacionService:
             self.db.add(conv)
             self.db.flush()
 
+        # DETERMINAR EL REMITENTE
+        # Si 'enviado_por_mi' es True, el mensaje viene del barbero (desde el celular)
+        remitente = "barberia" if enviado_por_mi else "cliente"
+
         mensaje = Mensaje(
             conversacion_id=conv.id,
             contenido=mensaje_texto,
-            enviado_por="cliente",
+            enviado_por=remitente, # <--- Dinámico
         )
         self.db.add(mensaje)
+        
+        # ACTUALIZAR EL SNIPPET DE LA BARRA LATERAL
         conv.ultimo_mensaje = mensaje_texto
         conv.ultimo_mensaje_en = datetime.utcnow()
-        conv.no_leidos += 1
+        
+        # Solo aumentar no leídos si es un mensaje del cliente
+        if not enviado_por_mi:
+            conv.no_leidos += 1
+            
         self.db.commit()
         return {"ok": True, "conversacion_id": conv.id, "negocio": negocio}
 

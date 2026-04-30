@@ -37,31 +37,43 @@ async def webhook_whatsapp(
     background_tasks: BackgroundTasks, 
     db: Session = Depends(get_db)
 ):
-    # Evolution API manda la info dentro de 'data'
+    # 1. Extraer datos de Evolution API
     data = payload.get("data", {})
     message = data.get("message", {})
+    
+    # IMPORTANTE: 'fromMe' indica si el mensaje salió de tu propio WhatsApp
+    enviado_por_mi = data.get("key", {}).get("fromMe", False)
 
-    # Extraemos los datos reales
-    # El teléfono viene en 'key.remoteJid' (ej: 573001234567@s.whatsapp.net)
+    # Extraer teléfono y mensaje
     remote_jid = data.get("key", {}).get("remoteJid", "")
     telefono = remote_jid.split("@")[0]
-
     nombre = data.get("pushName", "Cliente")
-
-    # El mensaje puede venir en 'conversation' o 'extendedTextMessage'
     mensaje_texto = message.get("conversation") or \
                     message.get("extendedTextMessage", {}).get("text", "")
     
     if not mensaje_texto:
         return {"status": "ignored", "reason": "no_text_message"}
 
+    # 2. Procesar en el servicio (Pasamos el flag enviado_por_mi)
     conv_service = ConversacionService(db)
-
-    # Aquí usamos las variables que acabamos de extraer
-    res = await conv_service.procesar_webhook(
+    res = conv_service.procesar_webhook(
         negocio_slug=negocio_slug,
         telefono=telefono,
         nombre=nombre,
-        mensaje_texto=mensaje_texto
+        mensaje_texto=mensaje_texto,
+        enviado_por_mi=enviado_por_mi # Asegúrate de actualizar el Service con este parámetro
     )
+
+    # 3. DISPARAR A CARLOS (Solo si es un mensaje de un cliente y la IA está activa)
+    negocio = res.get("negocio")
+    if not enviado_por_mi and negocio and negocio.carlos_activa:
+        background_tasks.add_task(
+            flujo_Carlos_completo,
+            negocio.id,
+            res.get("conversacion_id"),
+            telefono,
+            mensaje_texto,
+            db
+        )
+
     return {"status": "success", "data": res}
