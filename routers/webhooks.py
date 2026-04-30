@@ -31,39 +31,40 @@ async def flujo_Carlos_completo(negocio_id: int, conversacion_id: int, telefono:
     await ws_service.enviar_mensaje(telefono, respuesta_texto)
 
 @router.post("/whatsapp/{negocio_slug}")
-async def webhook_whatsapp(
-    negocio_slug: str, 
-    payload: dict, 
-    background_tasks: BackgroundTasks, 
-    db: Session = Depends(get_db)
-):
+async def webhook_whatsapp(negocio_slug: str, payload: dict, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    # Extraer capas de la Evolution API
     data = payload.get("data", {})
-    message = data.get("message", {})
     key = data.get("key", {})
+    message = data.get("message", {})
 
-    # Detectar si el mensaje fue enviado desde el celular del negocio
-    enviado_por_mi = key.get("fromMe", False)
+    # DETECCIÓN DE REMITENTE (Crucial para la alineación)
+    # Buscamos 'fromMe' tanto en la raíz como dentro de 'key'
+    enviado_por_mi = data.get("fromMe") if data.get("fromMe") is not None else key.get("fromMe", False)
 
+    # EXTRACCIÓN DE IDENTIDAD
     remote_jid = key.get("remoteJid", "")
     telefono = remote_jid.split("@")[0]
-    nombre = data.get("pushName") # El nombre que configuró el cliente en su WhatsApp
+    
+    # Solo actualizamos el nombre si el mensaje NO es nuestro
+    # Así evitamos que tu nombre de dueño pise el del cliente
+    nombre_cliente = data.get("pushName") if not enviado_por_mi else None
 
     mensaje_texto = message.get("conversation") or \
                     message.get("extendedTextMessage", {}).get("text", "")
     
     if not mensaje_texto:
-        return {"status": "ignored", "reason": "no_text_message"}
+        return {"status": "ignored", "reason": "no_text_payload"}
 
     conv_service = ConversacionService(db)
     res = conv_service.procesar_webhook(
         negocio_slug=negocio_slug,
         telefono=telefono,
-        nombre=nombre,
+        nombre=nombre_cliente,
         mensaje_texto=mensaje_texto,
-        enviado_por_mi=enviado_por_mi
+        enviado_por_mi=enviado_por_mi # <--- Pasamos el flag real
     )
 
-    # Disparar a Carlos solo si el mensaje es del cliente
+    # Solo la IA responde si es un mensaje que ENTRA (no uno que tú envías)
     negocio = res.get("negocio")
     if not enviado_por_mi and negocio and negocio.carlos_activa:
         background_tasks.add_task(
@@ -75,4 +76,4 @@ async def webhook_whatsapp(
             db
         )
 
-    return {"status": "success", "data": res}
+    return {"status": "success"}
