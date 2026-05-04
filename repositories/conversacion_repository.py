@@ -38,4 +38,19 @@ class MensajeRepository(BaseRepository[Mensaje]):
     def marcar_leidos(self, conversacion_id: int) -> None:
         self.db.query(Mensaje).filter(Mensaje.conversacion_id == conversacion_id, Mensaje.leido == False)\
             .update({"leido": True}, synchronize_session=False)
-        # El commit lo hace el service
+
+    # --- MÉTODO PARA SOLUCIONAR EL ATTRIBUTE ERROR ---
+    def count_Carlos_by_negocio(self, negocio_id: int) -> int:
+        """
+        Cuenta los mensajes enviados por el asistente (Carlos) para un negocio específico.
+        Se hace un join con Conversacion para filtrar por negocio_id.
+        """
+        return (
+            self.db.query(Mensaje)
+            .join(Conversacion)
+            .filter(
+                Conversacion.negocio_id == negocio_id,
+                Mensaje.enviado_por == 'Carlos' # Verifica si este es el valor exacto en tu BD
+            )
+            .count()
+        )
