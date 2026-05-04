@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, Field
 from typing import Optional, List
 from datetime import datetime
 from models.all_models import EstadoCita, DiaSemana
@@ -198,13 +198,14 @@ class CitaResponse(BaseModel):
     precio: float
     estado: EstadoCita
     notas: Optional[str]
-    creada_por_Carlos: bool # Coincide con tu modelo (C mayúscula)
+    creada_por_carlos: bool = Field(validation_alias='creada_por_Carlos')
     cliente: Optional[CitaClienteResponse]
     barbero: Optional[BarberoResponse]
     servicio: Optional[ServicioResponse]
 
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 # ─── DASHBOARD STATS ──────────────────────────────────────────────────────────
 
@@ -243,10 +244,11 @@ class ConversacionResponse(BaseModel):
     ultimo_mensaje: Optional[str]
     ultimo_mensaje_en: Optional[datetime]
     no_leidos: int
-    manejada_por_Carlos: bool # Coincide con tu modelo (C mayúscula)
+    manejada_por_carlos: bool = Field(validation_alias='manejada_por_Carlos')
 
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 class MensajeResponse(BaseModel):
     id: int
@@ -265,7 +267,7 @@ class EnviarMensajeRequest(BaseModel):
 
 class CarlosStats(BaseModel):
     mensajes_respondidos: int
-    citas_creadas_por_Carlos: int
+    citas_creadas_por_carlos: int
     tasa_respuesta: float
 
 class CarlosIndicacionCreate(BaseModel):

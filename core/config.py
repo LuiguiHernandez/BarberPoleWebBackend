@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     N8N_WEBHOOK_URL: str = "http://167.172.145.102:5678/webhook/whatsapp"
     N8N_WEBHOOK_SECRET: str = ""
 
+    # Google Gemini IA
+    GEMINI_API_KEY: str = ""
+
     # App
     APP_NAME: str = "BarberPole"
     DEBUG: bool = True

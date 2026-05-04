@@ -1,34 +1,52 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
-from core.database import get_db
+from core.config import settings
+from core.database import get_db, SessionLocal
 from services.carlos_service import CarlosService
 from services.ai_engine import CarlosEngine
 from services.whatsapp_service import WhatsAppService
 from services.conversacion_service import ConversacionService
+from models.all_models import Conversacion
 from schemas.all_schemas import WebhookMensajeEntrante
 
 router = APIRouter()
 
 # Función que procesa la IA en segundo plano
-async def flujo_Carlos_completo(negocio_id: int, conversacion_id: int, telefono: str, mensaje: str, db: Session):
-    carlos_service = CarlosService(db)
-    ai_engine = CarlosEngine()
-    ws_service = WhatsAppService()
+async def flujo_Carlos_completo(negocio_id: int, conversacion_id: int, telefono: str, mensaje: str):
+    # Usa una sesión propia para el background task
+    db = SessionLocal()
+    try:
+        if not settings.GEMINI_API_KEY:
+            return
 
-    # 1. Obtener contexto (Las reglas del Dashboard)
-    contexto = carlos_service.obtener_contexto_Carlos(negocio_id)
-    
-    # 2. Obtener historial (Contexto de la charla)
-    historial = carlos_service.obtener_historial_reciente(conversacion_id)
+        carlos_service = CarlosService(db)
+        ai_engine = CarlosEngine()
+        ws_service = WhatsAppService()
 
-    # 3. La IA genera la respuesta
-    respuesta_texto = await ai_engine.pedir_respuesta(contexto, historial, mensaje)
+        # 1. Obtener contexto (Las reglas del Dashboard)
+        contexto = carlos_service.obtener_contexto_Carlos(negocio_id)
 
-    # 4. Guardar respuesta en el SaaS
-    carlos_service.msg_repo.save_message(conversacion_id, respuesta_texto, "Carlos")
+        # 2. Obtener historial (Contexto de la charla)
+        historial = carlos_service.obtener_historial_reciente(conversacion_id)
 
-    # 5. Enviar a WhatsApp real vía Evolution API
-    await ws_service.enviar_mensaje(telefono, respuesta_texto)
+        # 3. La IA genera la respuesta
+        respuesta_texto = await ai_engine.pedir_respuesta(contexto, historial, mensaje)
+
+        # 4. Guardar respuesta y actualizar conversación
+        carlos_service.msg_repo.save_message(conversacion_id, respuesta_texto, "carlos")
+        conv = db.query(Conversacion).filter(Conversacion.id == conversacion_id).first()
+        if conv:
+            conv.ultimo_mensaje = respuesta_texto
+            conv.ultimo_mensaje_en = datetime.utcnow()
+            db.commit()
+
+        # 5. Enviar a WhatsApp real vía Evolution API
+        await ws_service.enviar_mensaje(telefono, respuesta_texto)
+    except Exception as e:
+        print(f"Error en flujo_Carlos_completo: {e}")
+    finally:
+        db.close()
 
 @router.post("/whatsapp/{negocio_slug}")
 async def webhook_whatsapp(negocio_slug: str, payload: dict, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
@@ -73,7 +91,6 @@ async def webhook_whatsapp(negocio_slug: str, payload: dict, background_tasks: B
             res.get("conversacion_id"),
             telefono,
             mensaje_texto,
-            db
         )
 
     return {"status": "success"}

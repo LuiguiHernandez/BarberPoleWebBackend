@@ -131,7 +131,7 @@ class ConversacionService:
         mensaje = Mensaje(
             conversacion_id=conversacion_id,
             contenido=respuesta,
-            enviado_por="Carlos",
+            enviado_por="carlos",
         )
         self.db.add(mensaje)
         conv.ultimo_mensaje = respuesta

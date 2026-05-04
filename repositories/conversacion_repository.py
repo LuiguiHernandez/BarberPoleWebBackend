@@ -39,31 +39,44 @@ class MensajeRepository(BaseRepository[Mensaje]):
         self.db.query(Mensaje).filter(Mensaje.conversacion_id == conversacion_id, Mensaje.leido == False)\
             .update({"leido": True}, synchronize_session=False)
 
-    # --- MÉTODO PARA SOLUCIONAR EL ATTRIBUTE ERROR ---
+    def save_message(self, conversacion_id: int, contenido: str, enviado_por: str) -> Mensaje:
+        msg = Mensaje(
+            conversacion_id=conversacion_id,
+            contenido=contenido,
+            enviado_por=enviado_por,
+        )
+        self.db.add(msg)
+        self.db.commit()
+        self.db.refresh(msg)
+        return msg
+
+    def get_recent_by_conversacion(self, conversacion_id: int, limite: int = 5) -> List[Mensaje]:
+        return (
+            self.db.query(Mensaje)
+            .filter(Mensaje.conversacion_id == conversacion_id)
+            .order_by(Mensaje.enviado_en.desc())
+            .limit(limite)
+            .all()[::-1]
+        )
+
     def count_Carlos_by_negocio(self, negocio_id: int) -> int:
-        """
-        Cuenta los mensajes enviados por el asistente (Carlos) para un negocio específico.
-        Se hace un join con Conversacion para filtrar por negocio_id.
-        """
         return (
             self.db.query(Mensaje)
             .join(Conversacion)
             .filter(
                 Conversacion.negocio_id == negocio_id,
-                Mensaje.enviado_por == 'Carlos' # Verifica si este es el valor exacto en tu BD
+                Mensaje.enviado_por == 'carlos',
             )
             .count()
         )
+
     def count_cliente_by_negocio(self, negocio_id: int) -> int:
-        """
-        Cuenta los mensajes recibidos de clientes para un negocio.
-        """
         return (
             self.db.query(Mensaje)
             .join(Conversacion)
             .filter(
                 Conversacion.negocio_id == negocio_id,
-                Mensaje.enviado_por == 'cliente'
+                Mensaje.enviado_por == 'cliente',
             )
             .count()
         )

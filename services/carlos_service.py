@@ -31,7 +31,7 @@ class CarlosService:
         tasa = (mensajes / total_entrantes * 100) if total_entrantes > 0 else 0
         return CarlosStats(
             mensajes_respondidos=mensajes,
-            citas_creadas_por_Carlos=citas_Carlos,
+            citas_creadas_por_carlos=citas_Carlos,
             tasa_respuesta=round(tasa, 1),
         )
 
