@@ -54,3 +54,16 @@ class MensajeRepository(BaseRepository[Mensaje]):
             )
             .count()
         )
+    def count_cliente_by_negocio(self, negocio_id: int) -> int:
+        """
+        Cuenta los mensajes recibidos de clientes para un negocio.
+        """
+        return (
+            self.db.query(Mensaje)
+            .join(Conversacion)
+            .filter(
+                Conversacion.negocio_id == negocio_id,
+                Mensaje.enviado_por == 'cliente'
+            )
+            .count()
+        )
