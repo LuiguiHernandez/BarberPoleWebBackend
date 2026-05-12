@@ -8,6 +8,10 @@ from repositories.negocio_repository import NegocioRepository
 from repositories.cliente_repository import ClienteRepository
 from repositories.servicio_repository import ServicioRepository
 from schemas.all_schemas import CitaCreate, CitaUpdate, DashboardStats
+from services.gcal_service import GoogleCalendarService
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class CitaService:
@@ -118,10 +122,24 @@ class CitaService:
             notas=data.notas,
             estado=EstadoCita.pendiente,
             creada_manualmente=True,
+            fuente=getattr(data, "fuente", "admin") or "admin",
         )
         self.db.add(cita)
         self.db.commit()
         self.db.refresh(cita)
+
+        # Cargar relaciones y crear evento en Google Calendar
+        cita_completa = self.repo.get_con_relaciones(cita.id)
+        try:
+            gcal = GoogleCalendarService(self.db)
+            event_id = gcal.crear_evento(negocio_id, cita_completa)
+            if event_id:
+                cita.gcal_event_id = event_id
+                self.db.commit()
+                logger.info(f"[CITA] Evento GCal creado: {event_id}")
+        except Exception as e:
+            logger.warning(f"[CITA] GCal no disponible (no crítico): {e}")
+
         return self.repo.get_con_relaciones(cita.id)
 
     def actualizar(self, usuario_id: int, cita_id: int, data: CitaUpdate) -> Cita:
@@ -149,3 +167,11 @@ class CitaService:
             raise HTTPException(status_code=404, detail="Cita no encontrada")
         cita.estado = EstadoCita.cancelada
         self.db.commit()
+
+        # Eliminar evento de Google Calendar si existe
+        if cita.gcal_event_id:
+            try:
+                gcal = GoogleCalendarService(self.db)
+                gcal.eliminar_evento(negocio_id, cita.gcal_event_id)
+            except Exception as e:
+                logger.warning(f"[CITA] No se pudo eliminar evento GCal: {e}")

@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     # Google Gemini IA
     GEMINI_API_KEY: str = ""
 
+    # Google Calendar OAuth2
+    GCAL_CLIENT_ID: str = ""
+    GCAL_CLIENT_SECRET: str = ""
+    GCAL_REDIRECT_URI: str = "http://167.172.145.102:8000/api/gcal/callback"
+
     # App
     APP_NAME: str = "BarberPole"
     DEBUG: bool = True

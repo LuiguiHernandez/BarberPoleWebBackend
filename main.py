@@ -22,6 +22,7 @@ from routers.lealtad import router as lealtad_router
 from routers.conversaciones import router as conversaciones_router
 from routers.carlos import router as carlos_router
 from routers.webhooks import router as webhook_router
+from routers.gcal import router as gcal_router
 
 # Crear tablas en Postgres
 Base.metadata.create_all(bind=engine)
@@ -71,6 +72,7 @@ app.include_router(lealtad_router, prefix="/api/lealtad", tags=["Lealtad"])
 app.include_router(conversaciones_router, prefix="/api/conversaciones", tags=["Conversaciones"])
 app.include_router(carlos_router, prefix="/api/carlos", tags=["Carlos"])
 app.include_router(webhook_router, prefix="/api/webhooks", tags=["Webhooks"])
+app.include_router(gcal_router, prefix="/api/gcal", tags=["Google Calendar"])
 
 @app.get("/", tags=["Health"])
 def root():

@@ -76,6 +76,12 @@ class Negocio(Base):
     carlos_activa = Column(Boolean, default=False)
     carlos_recordatorios_activos = Column(Boolean, default=True)
 
+    # Google Calendar
+    gcal_access_token = Column(Text, nullable=True)
+    gcal_refresh_token = Column(Text, nullable=True)
+    gcal_connected = Column(Boolean, default=False)
+    gcal_calendar_id = Column(String(200), nullable=True, default="primary")
+
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
     actualizado_en = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -184,6 +190,10 @@ class Cita(Base):
     # Origen de la cita
     creada_por_Carlos = Column(Boolean, default=False)
     creada_manualmente = Column(Boolean, default=False)
+    fuente = Column(String(20), default="admin")  # admin | whatsapp | web | wordpress
+
+    # Google Calendar
+    gcal_event_id = Column(String(200), nullable=True)
 
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
     actualizado_en = Column(DateTime(timezone=True), onupdate=func.now())
