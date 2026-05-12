@@ -147,7 +147,8 @@ class GoogleCalendarService:
             partes.append(f"Fuente: {cita.fuente or 'admin'}")
             partes.append("Creado por GestorPro")
 
-            nombre_cliente = cita.cliente.nombre if cita.cliente else "Cliente"
+            nombre_cliente = (cita.cliente.nombre if cita.cliente and cita.cliente.nombre else None) or \
+                             (cita.cliente.telefono if cita.cliente else None) or "Cliente"
             nombre_servicio = cita.servicio.nombre if cita.servicio else "Cita"
 
             evento = {
@@ -210,7 +211,8 @@ class GoogleCalendarService:
             service    = self._get_service(negocio)
             cal_id     = negocio.gcal_calendar_id or "primary"
             emoji      = estados_emoji.get(cita.estado, "")
-            nombre_cli = cita.cliente.nombre if cita.cliente else "Cliente"
+            nombre_cli = (cita.cliente.nombre if cita.cliente and cita.cliente.nombre else None) or \
+                         (cita.cliente.telefono if cita.cliente else None) or "Cliente"
             nombre_svc = cita.servicio.nombre if cita.servicio else "Cita"
 
             service.events().patch(
