@@ -29,28 +29,18 @@ class GoogleCalendarService:
     # ─── OAuth2 ────────────────────────────────────────────────────────────────
 
     def generar_url_auth(self, negocio_id: int) -> str:
-        """Genera la URL de autorización de Google para el dueño del negocio."""
-        flow = Flow.from_client_config(
-            {
-                "web": {
-                    "client_id": settings.GCAL_CLIENT_ID,
-                    "client_secret": settings.GCAL_CLIENT_SECRET,
-                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                    "token_uri": "https://oauth2.googleapis.com/token",
-                    "redirect_uris": [settings.GCAL_REDIRECT_URI],
-                }
-            },
-            scopes=SCOPES,
-        )
-        flow.redirect_uri = settings.GCAL_REDIRECT_URI
-
-        auth_url, _ = flow.authorization_url(
-            access_type="offline",
-            include_granted_scopes="true",
-            prompt="consent",
-            state=str(negocio_id),
-        )
-        return auth_url
+        """Genera la URL de autorización de Google sin PKCE."""
+        params = urllib.parse.urlencode({
+            "client_id": settings.GCAL_CLIENT_ID,
+            "redirect_uri": settings.GCAL_REDIRECT_URI,
+            "response_type": "code",
+            "scope": "https://www.googleapis.com/auth/calendar",
+            "access_type": "offline",
+            "prompt": "consent",
+            "state": str(negocio_id),
+            "include_granted_scopes": "true",
+        })
+        return f"https://accounts.google.com/o/oauth2/v2/auth?{params}"
 
     def guardar_tokens_desde_callback(self, code: str, negocio_id: int) -> bool:
         """Intercambia el código de autorización por tokens y los guarda en BD."""
