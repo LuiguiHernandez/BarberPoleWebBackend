@@ -175,6 +175,7 @@ class CitaCreate(BaseModel):
     notas: Optional[str] = None
     cliente_nombre: Optional[str] = None
     cliente_telefono: Optional[str] = None
+    fuente: Optional[str] = "admin"
 
 class CitaUpdate(BaseModel):
     barbero_id: Optional[int] = None
@@ -199,6 +200,8 @@ class CitaResponse(BaseModel):
     estado: EstadoCita
     notas: Optional[str]
     creada_por_carlos: bool = Field(validation_alias='creada_por_Carlos')
+    fuente: Optional[str] = "admin"
+    gcal_event_id: Optional[str] = None
     cliente: Optional[CitaClienteResponse]
     barbero: Optional[BarberoResponse]
     servicio: Optional[ServicioResponse]
