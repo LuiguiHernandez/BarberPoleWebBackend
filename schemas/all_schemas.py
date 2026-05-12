@@ -59,16 +59,16 @@ class NegocioResponse(BaseModel):
     lealtad_sellos_requeridos: int
     lealtad_recompensa: str
     reservas_activas: bool
-    reservas_anticipacion_max_dias: int
-    reservas_cancelacion_horas: int
+    reservas_anticipacion_max_dias: Optional[int] = 30
+    reservas_cancelacion_horas: Optional[int] = 2
     acepta_efectivo: bool
     acepta_transferencia: bool
-    acepta_tarjeta: bool
-    notif_nueva_cita: bool
-    notif_recordatorio: bool
-    notif_cancelacion: bool
+    acepta_tarjeta: Optional[bool] = False
+    notif_nueva_cita: Optional[bool] = True
+    notif_recordatorio: Optional[bool] = True
+    notif_cancelacion: Optional[bool] = True
     carlos_activa: bool
-    carlos_recordatorios_activos: bool
+    carlos_recordatorios_activos: Optional[bool] = True
     gcal_connected: bool = False
     gcal_calendar_id: Optional[str] = "primary"
 
