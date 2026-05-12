@@ -3,6 +3,7 @@ GestorPro — Google Calendar Service
 Maneja OAuth2 y operaciones de calendario por negocio.
 """
 import logging
+import urllib.parse
 from datetime import datetime, timedelta
 from typing import Optional, List
 from google.oauth2.credentials import Credentials
@@ -54,29 +55,32 @@ class GoogleCalendarService:
     def guardar_tokens_desde_callback(self, code: str, negocio_id: int) -> bool:
         """Intercambia el código de autorización por tokens y los guarda en BD."""
         try:
-            flow = Flow.from_client_config(
-                {
-                    "web": {
-                        "client_id": settings.GCAL_CLIENT_ID,
-                        "client_secret": settings.GCAL_CLIENT_SECRET,
-                        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                        "token_uri": "https://oauth2.googleapis.com/token",
-                        "redirect_uris": [settings.GCAL_REDIRECT_URI],
-                    }
-                },
-                scopes=SCOPES,
-            )
-            flow.redirect_uri = settings.GCAL_REDIRECT_URI
-            flow.fetch_token(code=code)
+            import urllib.request
+            import json as json_lib
 
-            creds = flow.credentials
+            # Intercambio manual del code por tokens (evita problemas con PKCE)
+            token_url = "https://oauth2.googleapis.com/token"
+            data = urllib.parse.urlencode({
+                "code": code,
+                "client_id": settings.GCAL_CLIENT_ID,
+                "client_secret": settings.GCAL_CLIENT_SECRET,
+                "redirect_uri": settings.GCAL_REDIRECT_URI,
+                "grant_type": "authorization_code",
+            }).encode()
+
+            req = urllib.request.Request(token_url, data=data, method="POST")
+            req.add_header("Content-Type", "application/x-www-form-urlencoded")
+
+            with urllib.request.urlopen(req) as resp:
+                tokens = json_lib.loads(resp.read())
+
             negocio = self.db.query(Negocio).filter(Negocio.id == negocio_id).first()
             if not negocio:
                 return False
 
-            negocio.gcal_access_token = creds.token
-            negocio.gcal_refresh_token = creds.refresh_token
-            negocio.gcal_connected = True
+            negocio.gcal_access_token  = tokens.get("access_token")
+            negocio.gcal_refresh_token = tokens.get("refresh_token")
+            negocio.gcal_connected     = True
             self.db.commit()
             logger.info(f"[GCAL] Tokens guardados para negocio_id={negocio_id}")
             return True
