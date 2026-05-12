@@ -69,6 +69,8 @@ class NegocioResponse(BaseModel):
     notif_cancelacion: bool
     carlos_activa: bool
     carlos_recordatorios_activos: bool
+    gcal_connected: bool = False
+    gcal_calendar_id: Optional[str] = "primary"
 
     class Config:
         from_attributes = True
