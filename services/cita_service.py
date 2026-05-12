@@ -153,7 +153,16 @@ class CitaService:
             raise HTTPException(status_code=404, detail="Cita no encontrada")
 
         for field, value in data.model_dump(exclude_unset=True).items():
+            if field == "cliente_nombre":
+                continue  # se maneja aparte
             setattr(cita, field, value)
+
+        # Actualizar nombre del cliente si viene
+        if data.cliente_nombre and cita.cliente_id:
+            from models.all_models import Cliente as ClienteModel
+            cliente = self.db.query(ClienteModel).filter(ClienteModel.id == cita.cliente_id).first()
+            if cliente:
+                cliente.nombre = data.cliente_nombre
 
         if data.servicio_id:
             servicio = self.servicio_repo.get_by_id(data.servicio_id)

@@ -185,6 +185,7 @@ class CitaUpdate(BaseModel):
     fecha_hora: Optional[datetime] = None
     estado: Optional[EstadoCita] = None
     notas: Optional[str] = None
+    cliente_nombre: Optional[str] = None
 
 class CitaClienteResponse(BaseModel):
     id: int
