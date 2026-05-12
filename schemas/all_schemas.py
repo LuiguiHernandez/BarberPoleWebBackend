@@ -159,9 +159,9 @@ class ClienteResponse(BaseModel):
     nombre: str
     telefono: Optional[str]
     email: Optional[str]
-    sellos: int
-    sellos_totales: int
-    recompensas_canjeadas: int
+    sellos: Optional[int] = 0
+    sellos_totales: Optional[int] = 0
+    recompensas_canjeadas: Optional[int] = 0
     creado_en: datetime
 
     class Config:
@@ -236,9 +236,9 @@ class DarSelloRequest(BaseModel):
     telefono: str
 
 class LealtadResumen(BaseModel):
-    total_clientes: int
-    sellos_dados_hoy: int
-    recompensas_canjeadas_total: int
+    total_clientes: Optional[int] = 0
+    sellos_dados_hoy: Optional[int] = 0
+    recompensas_canjeadas_total: Optional[int] = 0
 
 # ─── CONVERSACIONES ───────────────────────────────────────────────────────────
 
