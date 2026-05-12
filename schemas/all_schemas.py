@@ -201,7 +201,7 @@ class CitaResponse(BaseModel):
     precio: float
     estado: EstadoCita
     notas: Optional[str]
-    creada_por_carlos: bool = Field(validation_alias='creada_por_Carlos')
+    creada_por_carlos: bool = Field(False, validation_alias='creada_por_Carlos')
     fuente: Optional[str] = "admin"
     gcal_event_id: Optional[str] = None
     cliente: Optional[CitaClienteResponse]
