@@ -192,7 +192,36 @@ class GoogleCalendarService:
             logger.error(f"[GCAL] Error creando evento: {e}")
             return None
 
-    def eliminar_evento(self, negocio_id: int, gcal_event_id: str) -> bool:
+    def actualizar_evento(self, negocio_id: int, cita: Cita) -> bool:
+        """Actualiza el título del evento en GCal para reflejar el estado de la cita."""
+        negocio = self.db.query(Negocio).filter(Negocio.id == negocio_id).first()
+        if not negocio or not negocio.gcal_connected or not cita.gcal_event_id:
+            return False
+
+        estados_emoji = {
+            "completada": "✅",
+            "cancelada":  "❌",
+            "no_asistio": "⚠️",
+            "confirmada": "📅",
+            "pendiente":  "🕐",
+        }
+
+        try:
+            service    = self._get_service(negocio)
+            cal_id     = negocio.gcal_calendar_id or "primary"
+            emoji      = estados_emoji.get(cita.estado, "")
+            nombre_cli = cita.cliente.nombre if cita.cliente else "Cliente"
+            nombre_svc = cita.servicio.nombre if cita.servicio else "Cita"
+
+            service.events().patch(
+                calendarId=cal_id,
+                eventId=cita.gcal_event_id,
+                body={"summary": f"{emoji} {nombre_cli} — {nombre_svc}"},
+            ).execute()
+            return True
+        except Exception as e:
+            logger.warning(f"[GCAL] No se pudo actualizar evento: {e}")
+            return False
         """Elimina un evento de Google Calendar (para cancelaciones)."""
         negocio = self.db.query(Negocio).filter(Negocio.id == negocio_id).first()
         if not negocio or not negocio.gcal_connected or not gcal_event_id:

@@ -158,6 +158,21 @@ class CitaService:
                 cita.duracion_minutos = servicio.duracion_minutos
 
         self.db.commit()
+
+        # Actualizar título del evento en Google Calendar si cambió el estado
+        if data.estado and cita.gcal_event_id:
+            try:
+                cita_completa = self.repo.get_con_relaciones(cita.id)
+                gcal = GoogleCalendarService(self.db)
+                if data.estado == "cancelada":
+                    gcal.eliminar_evento(negocio_id, cita.gcal_event_id)
+                    cita.gcal_event_id = None
+                    self.db.commit()
+                else:
+                    gcal.actualizar_evento(negocio_id, cita_completa)
+            except Exception as e:
+                logger.warning(f"[CITA] GCal actualizar no crítico: {e}")
+
         return self.repo.get_con_relaciones(cita.id)
 
     def cancelar(self, usuario_id: int, cita_id: int) -> None:
