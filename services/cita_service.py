@@ -90,17 +90,21 @@ class CitaService:
         negocio_id = self._negocio_id(usuario_id)
 
         cliente_id = data.cliente_id
-        if not cliente_id and data.cliente_nombre:
+        if not cliente_id and (data.cliente_nombre or data.cliente_telefono):
             cliente = None
             if data.cliente_telefono:
                 cliente = self.cliente_repo.get_by_telefono(negocio_id, data.cliente_telefono)
             if not cliente:
                 cliente = Cliente(
                     negocio_id=negocio_id,
-                    nombre=data.cliente_nombre,
+                    nombre=data.cliente_nombre or data.cliente_telefono or "Cliente",
                     telefono=data.cliente_telefono,
                 )
                 self.db.add(cliente)
+                self.db.flush()
+            elif data.cliente_nombre and not cliente.nombre:
+                # actualizar nombre si antes no tenía
+                cliente.nombre = data.cliente_nombre
                 self.db.flush()
             cliente_id = cliente.id
 
