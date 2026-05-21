@@ -75,6 +75,35 @@ class NegocioResponse(BaseModel):
     class Config:
         from_attributes = True
 
+# ─── CATEGORIA ────────────────────────────────────────────────────────────────
+
+class CategoriaCreate(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = None
+    imagen_url: Optional[str] = None
+    orden: int = 0
+    activa: bool = True
+
+class CategoriaUpdate(BaseModel):
+    nombre: Optional[str] = None
+    descripcion: Optional[str] = None
+    imagen_url: Optional[str] = None
+    orden: Optional[int] = None
+    activa: Optional[bool] = None
+
+class CategoriaResponse(BaseModel):
+    id: int
+    nombre: str
+    descripcion: Optional[str]
+    imagen_url: Optional[str]
+    orden: int
+    activa: bool
+    total_servicios: Optional[int] = 0     # calculado en el servicio
+    precio_desde: Optional[float] = None   # calculado en el servicio
+
+    class Config:
+        from_attributes = True
+
 # ─── SERVICIO ─────────────────────────────────────────────────────────────────
 
 class ServicioCreate(BaseModel):
@@ -82,7 +111,8 @@ class ServicioCreate(BaseModel):
     descripcion: Optional[str] = None
     duracion_minutos: int = 30
     precio: float
-    categoria: Optional[str] = None
+    categoria_id: Optional[int] = None    # FK a categorias
+    categoria: Optional[str] = None       # legado / compatibilidad
     imagen_url: Optional[str] = None
     activo: bool = True
 
@@ -91,6 +121,7 @@ class ServicioUpdate(BaseModel):
     descripcion: Optional[str] = None
     duracion_minutos: Optional[int] = None
     precio: Optional[float] = None
+    categoria_id: Optional[int] = None
     categoria: Optional[str] = None
     imagen_url: Optional[str] = None
     activo: Optional[bool] = None
@@ -101,7 +132,8 @@ class ServicioResponse(BaseModel):
     descripcion: Optional[str]
     duracion_minutos: int
     precio: float
-    categoria: Optional[str]
+    categoria_id: Optional[int]
+    categoria: Optional[str]              # nombre de la categoría (denormalizado para display)
     imagen_url: Optional[str]
     activo: bool
 

@@ -87,6 +87,7 @@ class Negocio(Base):
 
     usuario = relationship("Usuario", back_populates="negocio")
     barberos = relationship("Barbero", back_populates="negocio", cascade="all, delete")
+    categorias = relationship("Categoria", back_populates="negocio", cascade="all, delete")
     servicios = relationship("Servicio", back_populates="negocio", cascade="all, delete")
     clientes = relationship("Cliente", back_populates="negocio", cascade="all, delete")
     citas = relationship("Cita", back_populates="negocio", cascade="all, delete")
@@ -94,24 +95,47 @@ class Negocio(Base):
     carlos_indicaciones = relationship("CarlosIndicacion", back_populates="negocio", cascade="all, delete")
 
 
+# ─── CATEGORIA DE SERVICIO ────────────────────────────────────────────────────
+
+class Categoria(Base):
+    __tablename__ = "categorias"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    negocio_id   = Column(Integer, ForeignKey("negocios.id"), nullable=False)
+    nombre       = Column(String(100), nullable=False)
+    descripcion  = Column(Text, nullable=True)
+    imagen_url   = Column(String(500), nullable=True)
+    orden        = Column(Integer, default=0)        # para ordenar en el widget
+    activa       = Column(Boolean, default=True)
+    creado_en    = Column(DateTime(timezone=True), server_default=func.now())
+
+    negocio   = relationship("Negocio", back_populates="categorias")
+    servicios = relationship("Servicio", back_populates="categoria_rel")
+
+    class __table_args__:
+        pass  # puede agregar UniqueConstraint(negocio_id, nombre) más adelante
+
+
 # ─── SERVICIO ─────────────────────────────────────────────────────────────────
 
 class Servicio(Base):
     __tablename__ = "servicios"
 
-    id = Column(Integer, primary_key=True, index=True)
-    negocio_id = Column(Integer, ForeignKey("negocios.id"), nullable=False)
-    nombre = Column(String(100), nullable=False)
-    descripcion = Column(Text)
-    duracion_minutos = Column(Integer, nullable=False, default=30)
-    precio = Column(Float, nullable=False)
-    categoria = Column(String(100))          # "Tratamientos Faciales", "Masajes", etc.
-    imagen_url = Column(String(500))         # foto del servicio
-    activo = Column(Boolean, default=True)
-    creado_en = Column(DateTime(timezone=True), server_default=func.now())
+    id              = Column(Integer, primary_key=True, index=True)
+    negocio_id      = Column(Integer, ForeignKey("negocios.id"), nullable=False)
+    categoria_id    = Column(Integer, ForeignKey("categorias.id"), nullable=True)
+    nombre          = Column(String(100), nullable=False)
+    descripcion     = Column(Text)
+    duracion_minutos= Column(Integer, nullable=False, default=30)
+    precio          = Column(Float, nullable=False)
+    categoria       = Column(String(100))          # legado — usar categoria_id en adelante
+    imagen_url      = Column(String(500))
+    activo          = Column(Boolean, default=True)
+    creado_en       = Column(DateTime(timezone=True), server_default=func.now())
 
-    negocio = relationship("Negocio", back_populates="servicios")
-    citas = relationship("Cita", back_populates="servicio")
+    negocio       = relationship("Negocio", back_populates="servicios")
+    categoria_rel = relationship("Categoria", back_populates="servicios")
+    citas         = relationship("Cita", back_populates="servicio")
 
 
 # ─── BARBERO ──────────────────────────────────────────────────────────────────

@@ -65,31 +65,58 @@ def info_negocio(slug: str, db: Session = Depends(get_db)):
 @router.get("/{slug}/categorias")
 def listar_categorias(slug: str, db: Session = Depends(get_db)):
     n = get_negocio_by_slug(slug, db)
+    from models.all_models import Categoria
+    from sqlalchemy import func as sqlfunc
+
+    # Intentar usar tabla categorias normalizada
+    cats = db.query(Categoria).filter(
+        Categoria.negocio_id == n.id,
+        Categoria.activa == True
+    ).order_by(Categoria.orden, Categoria.nombre).all()
+
+    if cats:
+        result = []
+        for c in cats:
+            total = db.query(sqlfunc.count(Servicio.id)).filter(
+                Servicio.categoria_id == c.id,
+                Servicio.activo == True
+            ).scalar() or 0
+            precio_desde = db.query(sqlfunc.min(Servicio.precio)).filter(
+                Servicio.categoria_id == c.id,
+                Servicio.activo == True
+            ).scalar()
+            result.append({
+                "id": c.id,
+                "nombre": c.nombre,
+                "descripcion": c.descripcion,
+                "imagen_url": c.imagen_url,
+                "orden": c.orden,
+                "total_servicios": total,
+                "precio_desde": precio_desde,
+                "precio_desde_fmt": fmt_precio(precio_desde) if precio_desde else None,
+            })
+        return result
+
+    # Fallback: agrupar por campo texto si no hay categorías en tabla
     servicios = db.query(Servicio).filter(
         Servicio.negocio_id == n.id,
         Servicio.activo == True
     ).all()
-
-    # Agrupar por categoría (campo categoria si existe, sino "General")
-    cats: dict = {}
+    cats_dict: dict = {}
     for s in servicios:
-        cat = getattr(s, 'categoria', None) or "General"
-        if cat not in cats:
-            cats[cat] = {"nombre": cat, "total_servicios": 0, "precio_desde": None}
-        cats[cat]["total_servicios"] += 1
-        if cats[cat]["precio_desde"] is None or s.precio < cats[cat]["precio_desde"]:
-            cats[cat]["precio_desde"] = s.precio
+        cat = s.categoria or "General"
+        if cat not in cats_dict:
+            cats_dict[cat] = {"nombre": cat, "total": 0, "precio_desde": None}
+        cats_dict[cat]["total"] += 1
+        if cats_dict[cat]["precio_desde"] is None or s.precio < cats_dict[cat]["precio_desde"]:
+            cats_dict[cat]["precio_desde"] = s.precio
 
     return [
-        {
-            "id": i,
-            "nombre": v["nombre"],
-            "total_servicios": v["total_servicios"],
-            "precio_desde": fmt_precio(v["precio_desde"] or 0),
-            "precio_desde_raw": v["precio_desde"] or 0,
-            "imagen_url": None,
-        }
-        for i, (k, v) in enumerate(cats.items())
+        {"id": i, "nombre": v["nombre"], "descripcion": None, "imagen_url": None,
+         "orden": i, "total_servicios": v["total"],
+         "precio_desde": v["precio_desde"],
+         "precio_desde_fmt": fmt_precio(v["precio_desde"]) if v["precio_desde"] else None}
+        for i, (_, v) in enumerate(cats_dict.items())
     ]
 
 # ─────────────────────────────────────────────────────────────────────

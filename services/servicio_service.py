@@ -1,7 +1,7 @@
 from typing import List
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from models.all_models import Servicio
+from models.all_models import Servicio, Categoria
 from repositories.servicio_repository import ServicioRepository
 from repositories.negocio_repository import NegocioRepository
 from schemas.all_schemas import ServicioCreate, ServicioUpdate
@@ -11,6 +11,7 @@ class ServicioService:
     def __init__(self, db: Session):
         self.repo = ServicioRepository(db)
         self.negocio_repo = NegocioRepository(db)
+        self.db = db
 
     def _negocio_id(self, usuario_id: int) -> int:
         negocio = self.negocio_repo.get_by_usuario_id(usuario_id)
@@ -18,12 +19,20 @@ class ServicioService:
             raise HTTPException(status_code=404, detail="Negocio no encontrado")
         return negocio.id
 
+    def _sincronizar_categoria(self, servicio: Servicio) -> None:
+        """Si tiene categoria_id, rellena el campo texto 'categoria' con el nombre."""
+        if servicio.categoria_id:
+            cat = self.db.query(Categoria).filter(Categoria.id == servicio.categoria_id).first()
+            if cat:
+                servicio.categoria = cat.nombre
+
     def listar(self, usuario_id: int) -> List[Servicio]:
         return self.repo.get_by_negocio(self._negocio_id(usuario_id))
 
     def crear(self, usuario_id: int, data: ServicioCreate) -> Servicio:
         negocio_id = self._negocio_id(usuario_id)
         servicio = Servicio(negocio_id=negocio_id, **data.model_dump())
+        self._sincronizar_categoria(servicio)
         return self.repo.create(servicio)
 
     def actualizar(self, usuario_id: int, servicio_id: int, data: ServicioUpdate) -> Servicio:
@@ -33,6 +42,7 @@ class ServicioService:
             raise HTTPException(status_code=404, detail="Servicio no encontrado")
         for field, value in data.model_dump(exclude_unset=True).items():
             setattr(servicio, field, value)
+        self._sincronizar_categoria(servicio)
         return self.repo.update(servicio)
 
     def eliminar(self, usuario_id: int, servicio_id: int) -> None:
@@ -44,9 +54,8 @@ class ServicioService:
 
     async def upload_imagen(self, usuario_id: int, servicio_id: int, file) -> dict:
         import os, aiofiles
-        from sqlalchemy.orm import Session
         negocio_id = self._negocio_id(usuario_id)
-        servicio = self.repo.db.query(Servicio).filter(
+        servicio = self.db.query(Servicio).filter(
             Servicio.id == servicio_id, Servicio.negocio_id == negocio_id
         ).first()
         if not servicio:
@@ -58,6 +67,6 @@ class ServicioService:
             content = await file.read()
             await f.write(content)
         servicio.imagen_url = f"/{filename}"
-        self.repo.db.commit()
-        self.repo.db.refresh(servicio)
+        self.db.commit()
+        self.db.refresh(servicio)
         return {"imagen_url": servicio.imagen_url}
