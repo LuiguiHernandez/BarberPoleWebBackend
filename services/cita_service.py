@@ -89,6 +89,50 @@ class CitaService:
     def crear(self, usuario_id: int, data: CitaCreate) -> Cita:
         negocio_id = self._negocio_id(usuario_id)
 
+        # ── Validar horario del negocio ───────────────────────────────
+        from models.all_models import Horario, DiaSemana
+        dias_map = {
+            0: DiaSemana.lunes, 1: DiaSemana.martes, 2: DiaSemana.miercoles,
+            3: DiaSemana.jueves, 4: DiaSemana.viernes, 5: DiaSemana.sabado,
+            6: DiaSemana.domingo,
+        }
+        dia_semana = dias_map[data.fecha_hora.weekday()]
+        horario = self.db.query(Horario).filter(
+            Horario.negocio_id == negocio_id,
+            Horario.dia == dia_semana,
+            Horario.barbero_id == None,
+        ).first()
+
+        if horario:
+            if not horario.abierto:
+                dia_nombre = dia_semana.value.capitalize()
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"El negocio no atiende los {dia_nombre}s."
+                )
+            # Validar hora dentro del rango
+            hora_cita = data.fecha_hora.strftime("%H:%M")
+            if hora_cita < horario.hora_inicio or hora_cita >= horario.hora_fin:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"El horario de atención es de {horario.hora_inicio} a {horario.hora_fin}. La cita está fuera del horario."
+                )
+
+        # Validar anticipación máxima
+        from models.all_models import Negocio as NegocioModel
+        negocio = self.db.query(NegocioModel).filter(NegocioModel.id == negocio_id).first()
+        from datetime import date as date_type
+        hoy = date_type.today()
+        dias_anticipacion = (data.fecha_hora.date() - hoy).days
+        max_dias = getattr(negocio, "reservas_anticipacion_max_dias", 30) or 30
+        if dias_anticipacion < 0:
+            raise HTTPException(status_code=400, detail="No se pueden crear citas en el pasado.")
+        if dias_anticipacion > max_dias:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Solo se pueden agendar citas con máximo {max_dias} días de anticipación."
+            )
+
         cliente_id = data.cliente_id
         if not cliente_id and (data.cliente_nombre or data.cliente_telefono):
             cliente = None
