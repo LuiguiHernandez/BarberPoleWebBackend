@@ -114,12 +114,14 @@ class BarberoCreate(BaseModel):
     nombre: str
     telefono: Optional[str] = None
     email: Optional[str] = None
+    especialidad: Optional[str] = None
     activo: bool = True
 
 class BarberoUpdate(BaseModel):
     nombre: Optional[str] = None
     telefono: Optional[str] = None
     email: Optional[str] = None
+    especialidad: Optional[str] = None
     activo: Optional[bool] = None
 
 class BarberoResponse(BaseModel):
@@ -128,6 +130,7 @@ class BarberoResponse(BaseModel):
     telefono: Optional[str]
     email: Optional[str]
     foto_url: Optional[str]
+    especialidad: Optional[str]
     activo: bool
 
     class Config:

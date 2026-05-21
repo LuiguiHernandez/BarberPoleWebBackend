@@ -125,6 +125,7 @@ class Barbero(Base):
     telefono = Column(String(20))
     email = Column(String(150))
     foto_url = Column(String(500))
+    especialidad = Column(String(200))       # "Tratamientos Faciales", "Masajes", etc.
     activo = Column(Boolean, default=True)
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
 
