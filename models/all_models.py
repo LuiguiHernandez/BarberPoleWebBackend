@@ -151,7 +151,7 @@ class Barbero(Base):   # nombre de clase se mantiene por FK internas — tabla r
     creado_en    = Column(DateTime(timezone=True), server_default=func.now())
 
     negocio  = relationship("Negocio", back_populates="barberos")
-    citas    = relationship("Cita", back_populates="barbero")
+    citas    = relationship("Cita",    back_populates="barbero")
     horarios = relationship("Horario", back_populates="barbero")
 
 # Alias explícito para nuevo código
@@ -165,7 +165,7 @@ class Horario(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     negocio_id = Column(Integer, ForeignKey("negocios.id"), nullable=False)
-    barbero_id = Column(Integer, ForeignKey("barberos.id"), nullable=True)
+    barbero_id = Column(Integer, ForeignKey("profesionales.id"), nullable=True)
     dia = Column(Enum(DiaSemana), nullable=False)
     abierto = Column(Boolean, default=True)
     hora_inicio = Column(String(5), default="09:00")   # "09:00"
@@ -204,7 +204,7 @@ class Cita(Base):
     id = Column(Integer, primary_key=True, index=True)
     negocio_id = Column(Integer, ForeignKey("negocios.id"), nullable=False)
     cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True)
-    barbero_id = Column(Integer, ForeignKey("barberos.id"), nullable=True)
+    barbero_id = Column(Integer, ForeignKey("profesionales.id"), nullable=True)
     servicio_id = Column(Integer, ForeignKey("servicios.id"), nullable=True)
 
     # Datos de la cita
