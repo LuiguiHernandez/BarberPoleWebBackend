@@ -23,6 +23,7 @@ from routers.conversaciones import router as conversaciones_router
 from routers.carlos import router as carlos_router
 from routers.webhooks import router as webhook_router
 from routers.gcal import router as gcal_router
+from routers.public_booking import router as public_router
 
 # Crear tablas en Postgres
 Base.metadata.create_all(bind=engine)
@@ -39,25 +40,29 @@ app = FastAPI(
 
 # --- CONFIGURACIÓN DE CORS (UNIFICADA) ---
 origins = [
-    "http://167.172.145.102",      # Producción
-    "http://167.172.145.102:80",   # Producción puerto 80
-    "http://localhost:5173",       # Desarrollo Local
+    "http://167.172.145.102",
+    "http://167.172.145.102:80",
+    "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:5175",
     "http://localhost:3000",
+    "https://sensciencespa.com",
+    "https://www.sensciencespa.com",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=["*"],   # público — el widget se embebe en cualquier dominio
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
 # Configuración de archivos estáticos
 os.makedirs("uploads", exist_ok=True)
+os.makedirs("static", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # --- INCLUSIÓN DE ROUTERS CON PREFIJO /API ---
 # Aseguramos que todos coincidan con las llamadas de Axios en el Front
@@ -73,6 +78,7 @@ app.include_router(conversaciones_router, prefix="/api/conversaciones", tags=["C
 app.include_router(carlos_router, prefix="/api/carlos", tags=["Carlos"])
 app.include_router(webhook_router, prefix="/api/webhooks", tags=["Webhooks"])
 app.include_router(gcal_router, prefix="/api/gcal", tags=["Google Calendar"])
+app.include_router(public_router, prefix="/api/public", tags=["Booking Público"])
 
 @app.get("/", tags=["Health"])
 def root():
