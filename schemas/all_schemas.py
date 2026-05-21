@@ -142,21 +142,23 @@ class ServicioResponse(BaseModel):
 
 # ─── BARBERO ──────────────────────────────────────────────────────────────────
 
-class BarberoCreate(BaseModel):
+# ─── PROFESIONAL ──────────────────────────────────────────────────────────────
+
+class ProfesionalCreate(BaseModel):
     nombre: str
     telefono: Optional[str] = None
     email: Optional[str] = None
     especialidad: Optional[str] = None
     activo: bool = True
 
-class BarberoUpdate(BaseModel):
+class ProfesionalUpdate(BaseModel):
     nombre: Optional[str] = None
     telefono: Optional[str] = None
     email: Optional[str] = None
     especialidad: Optional[str] = None
     activo: Optional[bool] = None
 
-class BarberoResponse(BaseModel):
+class ProfesionalResponse(BaseModel):
     id: int
     nombre: str
     telefono: Optional[str]
@@ -167,6 +169,11 @@ class BarberoResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# Alias para compatibilidad con código que aún use Barbero
+BarberoCreate   = ProfesionalCreate
+BarberoUpdate   = ProfesionalUpdate
+BarberoResponse = ProfesionalResponse
 
 # ─── HORARIO ──────────────────────────────────────────────────────────────────
 
@@ -270,7 +277,7 @@ class InformesStats(BaseModel):
     ingresos_totales: float
     tasa_completadas: float
     citas_por_estado: dict
-    ingresos_por_barbero: List[dict]
+    ingresos_por_profesional: List[dict]
     citas_por_dia: List[dict] = []      # [{fecha, total}]
     historial_reciente: List[dict] = [] # [{id, cliente, servicio, fecha, estado, precio}]
 

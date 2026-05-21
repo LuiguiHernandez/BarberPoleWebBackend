@@ -15,7 +15,8 @@ from routers.auth import router as auth_router
 from routers.citas import router as citas_router
 from routers.negocio import router as negocio_router
 from routers.servicios import router as servicios_router
-from routers.barberos import router as barberos_router
+from routers.barberos import router as barberos_router          # legado
+from routers.profesionales import router as profesionales_router  # nuevo
 from routers.horarios import router as horarios_router
 from routers.informes import router as informes_router
 from routers.lealtad import router as lealtad_router
@@ -71,7 +72,8 @@ app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 app.include_router(citas_router, prefix="/api/citas", tags=["Citas"])
 app.include_router(negocio_router, prefix="/api/negocio", tags=["Negocio"])
 app.include_router(servicios_router, prefix="/api/servicios", tags=["Servicios"])
-app.include_router(barberos_router, prefix="/api/barberos", tags=["Barberos"])
+app.include_router(barberos_router,      prefix="/api/barberos",      tags=["Profesionales (legado)"])
+app.include_router(profesionales_router, prefix="/api/profesionales", tags=["Profesionales"])
 app.include_router(horarios_router, prefix="/api/horarios", tags=["Horarios"])
 app.include_router(informes_router, prefix="/api/informes", tags=["Informes"])
 app.include_router(lealtad_router, prefix="/api/lealtad", tags=["Lealtad"])

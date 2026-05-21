@@ -138,24 +138,27 @@ class Servicio(Base):
     citas         = relationship("Cita", back_populates="servicio")
 
 
-# ─── BARBERO ──────────────────────────────────────────────────────────────────
+# ─── PROFESIONAL ──────────────────────────────────────────────────────────────
 
-class Barbero(Base):
-    __tablename__ = "barberos"
+class Barbero(Base):   # nombre de clase se mantiene por FK internas — tabla renombrada en BD
+    __tablename__ = "profesionales"   # renombrado de "barberos"
 
-    id = Column(Integer, primary_key=True, index=True)
-    negocio_id = Column(Integer, ForeignKey("negocios.id"), nullable=False)
-    nombre = Column(String(100), nullable=False)
-    telefono = Column(String(20))
-    email = Column(String(150))
-    foto_url = Column(String(500))
-    especialidad = Column(String(200))       # "Tratamientos Faciales", "Masajes", etc.
-    activo = Column(Boolean, default=True)
-    creado_en = Column(DateTime(timezone=True), server_default=func.now())
+    id           = Column(Integer, primary_key=True, index=True)
+    negocio_id   = Column(Integer, ForeignKey("negocios.id"), nullable=False)
+    nombre       = Column(String(100), nullable=False)
+    telefono     = Column(String(20))
+    email        = Column(String(150))
+    foto_url     = Column(String(500))
+    especialidad = Column(String(200))
+    activo       = Column(Boolean, default=True)
+    creado_en    = Column(DateTime(timezone=True), server_default=func.now())
 
-    negocio = relationship("Negocio", back_populates="barberos")
-    citas = relationship("Cita", back_populates="barbero")
+    negocio  = relationship("Negocio", back_populates="barberos")
+    citas    = relationship("Cita", back_populates="barbero")
     horarios = relationship("Horario", back_populates="barbero")
+
+# Alias explícito para nuevo código
+Profesional = Barbero
 
 
 # ─── HORARIO ──────────────────────────────────────────────────────────────────

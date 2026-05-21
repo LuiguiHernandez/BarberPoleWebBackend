@@ -110,7 +110,7 @@ class InformeService:
             ingresos_totales=ingresos,
             tasa_completadas=round(tasa, 1),
             citas_por_estado=por_estado,
-            ingresos_por_barbero=[
+            ingresos_por_profesional=[
                 {"barbero": k, "ingresos": v} for k, v in barberos_ingresos.items()
             ],
             citas_por_dia=citas_por_dia,
