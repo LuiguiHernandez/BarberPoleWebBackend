@@ -72,6 +72,38 @@ class InformeService:
                 nombre = barbero.nombre if barbero else "Sin asignar"
                 barberos_ingresos[nombre] = barberos_ingresos.get(nombre, 0) + c.precio
 
+        # Citas por día (para gráfica de líneas)
+        from collections import defaultdict
+        por_dia: dict = defaultdict(int)
+        for c in citas:
+            dia = c.fecha_hora.strftime("%Y-%m-%d")
+            por_dia[dia] += 1
+        # Rellenar días sin citas con 0
+        from datetime import date as date_type
+        dias_totales = (fin.date() - inicio.date()).days + 1
+        citas_por_dia = []
+        for i in range(dias_totales):
+            dia = (inicio.date() + timedelta(days=i)).strftime("%Y-%m-%d")
+            citas_por_dia.append({"fecha": dia, "total": por_dia.get(dia, 0)})
+
+        # Historial reciente — últimas 20 citas ordenadas por fecha desc
+        from models.all_models import Cliente, Servicio as ServicioModel
+        historial = []
+        citas_ordenadas = sorted(citas, key=lambda c: c.fecha_hora, reverse=True)[:20]
+        for c in citas_ordenadas:
+            cliente = self.db.query(Cliente).filter(Cliente.id == c.cliente_id).first()
+            servicio = self.db.query(ServicioModel).filter(ServicioModel.id == c.servicio_id).first()
+            barbero = self.db.query(Barbero).filter(Barbero.id == c.barbero_id).first()
+            historial.append({
+                "id": c.id,
+                "cliente": cliente.nombre if cliente else "—",
+                "servicio": servicio.nombre if servicio else "—",
+                "profesional": barbero.nombre if barbero else "—",
+                "fecha": c.fecha_hora.strftime("%d/%m/%Y %H:%M"),
+                "estado": c.estado.value,
+                "precio": c.precio,
+            })
+
         return InformesStats(
             total_citas=total,
             completadas=completadas,
@@ -81,4 +113,6 @@ class InformeService:
             ingresos_por_barbero=[
                 {"barbero": k, "ingresos": v} for k, v in barberos_ingresos.items()
             ],
+            citas_por_dia=citas_por_dia,
+            historial_reciente=historial,
         )

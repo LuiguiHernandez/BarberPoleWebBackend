@@ -230,6 +230,8 @@ class InformesStats(BaseModel):
     tasa_completadas: float
     citas_por_estado: dict
     ingresos_por_barbero: List[dict]
+    citas_por_dia: List[dict] = []      # [{fecha, total}]
+    historial_reciente: List[dict] = [] # [{id, cliente, servicio, fecha, estado, precio}]
 
 # ─── LEALTAD ──────────────────────────────────────────────────────────────────
 
