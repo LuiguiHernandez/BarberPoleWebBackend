@@ -105,15 +105,12 @@ class Categoria(Base):
     nombre       = Column(String(100), nullable=False)
     descripcion  = Column(Text, nullable=True)
     imagen_url   = Column(String(500), nullable=True)
-    orden        = Column(Integer, default=0)        # para ordenar en el widget
+    orden        = Column(Integer, default=0)
     activa       = Column(Boolean, default=True)
     creado_en    = Column(DateTime(timezone=True), server_default=func.now())
 
     negocio   = relationship("Negocio", back_populates="categorias")
     servicios = relationship("Servicio", back_populates="categoria_rel")
-
-    class __table_args__:
-        pass  # puede agregar UniqueConstraint(negocio_id, nombre) más adelante
 
 
 # ─── SERVICIO ─────────────────────────────────────────────────────────────────
