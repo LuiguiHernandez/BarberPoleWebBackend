@@ -41,3 +41,23 @@ class BarberoService:
         if not barbero:
             raise HTTPException(status_code=404, detail="Barbero no encontrado")
         self.repo.delete(barbero)
+
+    async def upload_foto(self, usuario_id: int, barbero_id: int, file) -> dict:
+        import os, aiofiles
+        negocio_id = self._get_negocio_id(usuario_id)
+        barbero = self.db.query(Barbero).filter(
+            Barbero.id == barbero_id, Barbero.negocio_id == negocio_id
+        ).first()
+        if not barbero:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail="Profesional no encontrado")
+        os.makedirs("uploads/profesionales", exist_ok=True)
+        ext = file.filename.split(".")[-1].lower()
+        filename = f"uploads/profesionales/barbero_{barbero_id}.{ext}"
+        async with aiofiles.open(filename, "wb") as f:
+            content = await file.read()
+            await f.write(content)
+        barbero.foto_url = f"/{filename}"
+        self.db.commit()
+        self.db.refresh(barbero)
+        return {"foto_url": barbero.foto_url}

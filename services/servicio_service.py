@@ -41,3 +41,23 @@ class ServicioService:
         if not servicio:
             raise HTTPException(status_code=404, detail="Servicio no encontrado")
         self.repo.delete(servicio)
+
+    async def upload_imagen(self, usuario_id: int, servicio_id: int, file) -> dict:
+        import os, aiofiles
+        from sqlalchemy.orm import Session
+        negocio_id = self._negocio_id(usuario_id)
+        servicio = self.repo.db.query(Servicio).filter(
+            Servicio.id == servicio_id, Servicio.negocio_id == negocio_id
+        ).first()
+        if not servicio:
+            raise HTTPException(status_code=404, detail="Servicio no encontrado")
+        os.makedirs("uploads/servicios", exist_ok=True)
+        ext = file.filename.split(".")[-1].lower()
+        filename = f"uploads/servicios/servicio_{servicio_id}.{ext}"
+        async with aiofiles.open(filename, "wb") as f:
+            content = await file.read()
+            await f.write(content)
+        servicio.imagen_url = f"/{filename}"
+        self.repo.db.commit()
+        self.repo.db.refresh(servicio)
+        return {"imagen_url": servicio.imagen_url}

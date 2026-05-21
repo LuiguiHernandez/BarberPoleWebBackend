@@ -105,6 +105,8 @@ class Servicio(Base):
     descripcion = Column(Text)
     duracion_minutos = Column(Integer, nullable=False, default=30)
     precio = Column(Float, nullable=False)
+    categoria = Column(String(100))          # "Tratamientos Faciales", "Masajes", etc.
+    imagen_url = Column(String(500))         # foto del servicio
     activo = Column(Boolean, default=True)
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
 

@@ -82,6 +82,8 @@ class ServicioCreate(BaseModel):
     descripcion: Optional[str] = None
     duracion_minutos: int = 30
     precio: float
+    categoria: Optional[str] = None
+    imagen_url: Optional[str] = None
     activo: bool = True
 
 class ServicioUpdate(BaseModel):
@@ -89,6 +91,8 @@ class ServicioUpdate(BaseModel):
     descripcion: Optional[str] = None
     duracion_minutos: Optional[int] = None
     precio: Optional[float] = None
+    categoria: Optional[str] = None
+    imagen_url: Optional[str] = None
     activo: Optional[bool] = None
 
 class ServicioResponse(BaseModel):
@@ -97,6 +101,8 @@ class ServicioResponse(BaseModel):
     descripcion: Optional[str]
     duracion_minutos: int
     precio: float
+    categoria: Optional[str]
+    imagen_url: Optional[str]
     activo: bool
 
     class Config:

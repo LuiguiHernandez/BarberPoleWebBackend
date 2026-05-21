@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
 from core.database import get_db
@@ -47,3 +47,14 @@ def eliminar(
     current_user=Depends(get_current_user),
 ):
     service.eliminar(current_user.id, servicio_id)
+
+
+@router.post("/{servicio_id}/imagen")
+async def upload_imagen_servicio(
+    servicio_id: int,
+    file: UploadFile = File(...),
+    service: ServicioService = Depends(get_service),
+    current_user=Depends(get_current_user),
+):
+    """Sube imagen del servicio."""
+    return await service.upload_imagen(current_user.id, servicio_id, file)
