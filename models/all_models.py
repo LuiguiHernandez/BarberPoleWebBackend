@@ -82,6 +82,13 @@ class Negocio(Base):
     gcal_connected = Column(Boolean, default=False)
     gcal_calendar_id = Column(String(200), nullable=True, default="primary")
 
+    # Kommo CRM
+    kommo_account_id    = Column(String(100), nullable=True)
+    kommo_access_token  = Column(Text, nullable=True)
+    kommo_refresh_token = Column(Text, nullable=True)
+    kommo_base_url      = Column(String(200), nullable=True)   # https://{subdominio}.kommo.com
+    kommo_connected     = Column(Boolean, default=False)
+
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
     actualizado_en = Column(DateTime(timezone=True), onupdate=func.now())
 

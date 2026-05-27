@@ -25,6 +25,7 @@ from routers.carlos import router as carlos_router
 from routers.webhooks import router as webhook_router
 from routers.categorias import router as categorias_router
 from routers.gcal import router as gcal_router
+from routers.kommo import router as kommo_router
 from routers.public_booking import router as public_router
 
 # Crear tablas en Postgres
@@ -81,7 +82,8 @@ app.include_router(conversaciones_router, prefix="/api/conversaciones", tags=["C
 app.include_router(carlos_router, prefix="/api/carlos", tags=["Carlos"])
 app.include_router(webhook_router, prefix="/api/webhooks", tags=["Webhooks"])
 app.include_router(categorias_router, prefix="/api/categorias", tags=["Categorías"])
-app.include_router(gcal_router, prefix="/api/gcal", tags=["Google Calendar"])
+app.include_router(gcal_router,  prefix="/api/gcal",  tags=["Google Calendar"])
+app.include_router(kommo_router, prefix="/api/kommo", tags=["Kommo CRM"])
 app.include_router(public_router, prefix="/api/public", tags=["Booking Público"])
 
 @app.get("/", tags=["Health"])
