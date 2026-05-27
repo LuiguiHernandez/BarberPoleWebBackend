@@ -520,3 +520,82 @@ def estado_reserva(slug: str, cita_id: int, db: Session = Depends(get_db)):
         "precio": fmt_precio(cita.precio),
         "cliente": cliente.nombre if cliente else "—",
     }
+
+# ─────────────────────────────────────────────────────────────────────
+# GET /api/public/{slug}/sugerencias?servicio_id=X
+# Servicios complementarios sugeridos para agregar a la reserva
+# ─────────────────────────────────────────────────────────────────────
+@router.get("/{slug}/sugerencias")
+def sugerencias(
+    slug: str,
+    servicio_id: int,
+    db: Session = Depends(get_db),
+):
+    n = get_negocio_by_slug(slug, db)
+
+    # Obtener el servicio base
+    servicio_base = db.query(Servicio).filter(
+        Servicio.id == servicio_id,
+        Servicio.negocio_id == n.id,
+        Servicio.activo == True,
+    ).first()
+    if not servicio_base:
+        return []
+
+    # Estrategia 1: servicios de la misma categoría (diferente al seleccionado)
+    misma_cat = []
+    if servicio_base.categoria_id:
+        misma_cat = db.query(Servicio).filter(
+            Servicio.negocio_id == n.id,
+            Servicio.categoria_id == servicio_base.categoria_id,
+            Servicio.id != servicio_id,
+            Servicio.activo == True,
+        ).limit(3).all()
+
+    # Estrategia 2: servicios populares (más reservados) de otras categorías
+    from sqlalchemy import func as sqlfunc
+    populares = db.query(
+        Servicio,
+        sqlfunc.count(Cita.id).label("total_citas")
+    ).outerjoin(Cita, Cita.servicio_id == Servicio.id).filter(
+        Servicio.negocio_id == n.id,
+        Servicio.id != servicio_id,
+        Servicio.activo == True,
+        Servicio.categoria_id != servicio_base.categoria_id if servicio_base.categoria_id else True,
+    ).group_by(Servicio.id).order_by(sqlfunc.count(Cita.id).desc()).limit(4).all()
+
+    # Combinar sin duplicados
+    ids_vistos = {servicio_id}
+    resultado = []
+
+    for s in misma_cat:
+        if s.id not in ids_vistos:
+            ids_vistos.add(s.id)
+            resultado.append({
+                "id": s.id,
+                "nombre": s.nombre,
+                "descripcion": s.descripcion,
+                "precio": s.precio,
+                "precio_fmt": fmt_precio(s.precio),
+                "duracion_fmt": f"{s.duracion_minutos}min" if s.duracion_minutos < 60
+                    else f"{s.duracion_minutos//60}h{' '+str(s.duracion_minutos%60)+'min' if s.duracion_minutos%60 else ''}",
+                "imagen_url": s.imagen_url,
+                "razon": "De la misma categoría",
+            })
+
+    for s, _ in populares:
+        if s.id not in ids_vistos and len(resultado) < 4:
+            ids_vistos.add(s.id)
+            resultado.append({
+                "id": s.id,
+                "nombre": s.nombre,
+                "descripcion": s.descripcion,
+                "precio": s.precio,
+                "precio_fmt": fmt_precio(s.precio),
+                "duracion_fmt": f"{s.duracion_minutos}min" if s.duracion_minutos < 60
+                    else f"{s.duracion_minutos//60}h{' '+str(s.duracion_minutos%60)+'min' if s.duracion_minutos%60 else ''}",
+                "imagen_url": s.imagen_url,
+                "razon": "Muy solicitado",
+            })
+
+    return resultado[:4]
