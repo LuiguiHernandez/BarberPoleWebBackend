@@ -47,15 +47,17 @@ def fmt_precio(precio: float) -> str:
 # ─────────────────────────────────────────────────────────────────────
 @router.get("/{slug}/info")
 def info_negocio(slug: str, db: Session = Depends(get_db)):
+    from core.temas import get_tema_negocio
     n = get_negocio_by_slug(slug, db)
     return {
-        "nombre": n.nombre,
-        "slug": n.slug,
-        "telefono": n.telefono,
+        "nombre":    n.nombre,
+        "slug":      n.slug,
+        "telefono":  n.telefono,
         "direccion": n.direccion,
         "descripcion": n.descripcion,
-        "logo_url": n.logo_url if hasattr(n, 'logo_url') else None,
-        "color_marca": "#00A86B",
+        "logo_url":  n.logo_url if hasattr(n, 'logo_url') else None,
+        "url_web":   n.url_web if hasattr(n, 'url_web') else None,
+        "tema":      get_tema_negocio(n),
     }
 
 # ─────────────────────────────────────────────────────────────────────

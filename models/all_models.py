@@ -86,8 +86,16 @@ class Negocio(Base):
     kommo_account_id    = Column(String(100), nullable=True)
     kommo_access_token  = Column(Text, nullable=True)
     kommo_refresh_token = Column(Text, nullable=True)
-    kommo_base_url      = Column(String(200), nullable=True)   # https://{subdominio}.kommo.com
+    kommo_base_url      = Column(String(200), nullable=True)
     kommo_connected     = Column(Boolean, default=False)
+
+    # Tema visual y tipo de negocio
+    tipo_negocio      = Column(String(50), default="general")   # spa, barberia, medico, taller, nail, general
+    color_primario    = Column(String(7),  default="#00A86B")
+    color_secundario  = Column(String(7),  default="#E8F5EE")
+    color_fondo       = Column(String(7),  default="#FFFFFF")
+    color_texto       = Column(String(7),  default="#111827")
+    url_web           = Column(String(300), nullable=True)       # URL del sitio asociado (Juan)
 
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
     actualizado_en = Column(DateTime(timezone=True), onupdate=func.now())
