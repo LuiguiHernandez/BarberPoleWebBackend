@@ -25,8 +25,9 @@ class RegisterRequest(BaseModel):
 # ─── NEGOCIO ──────────────────────────────────────────────────────────────────
 
 class NegocioUpdate(BaseModel):
+    """Schema para actualización por el cliente — slug y tipo_negocio bloqueados."""
     nombre: Optional[str] = None
-    slug: Optional[str] = None
+    # slug: bloqueado — solo superadmin puede cambiar el slug
     telefono: Optional[str] = None
     whatsapp: Optional[str] = None
     direccion: Optional[str] = None

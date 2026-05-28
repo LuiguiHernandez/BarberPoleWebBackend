@@ -33,11 +33,13 @@ class DiaSemana(str, enum.Enum):
 class Usuario(Base):
     __tablename__ = "usuarios"
 
-    id = Column(Integer, primary_key=True, index=True)
-    nombre = Column(String(100), nullable=False)
-    email = Column(String(150), unique=True, index=True, nullable=False)
+    id            = Column(Integer, primary_key=True, index=True)
+    nombre        = Column(String(100), nullable=False)
+    email         = Column(String(150), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    creado_en = Column(DateTime(timezone=True), server_default=func.now())
+    rol           = Column(String(20), default="cliente")   # "superadmin" | "cliente"
+    activo        = Column(Boolean, default=True)
+    creado_en     = Column(DateTime(timezone=True), server_default=func.now())
 
     negocio = relationship("Negocio", back_populates="usuario", uselist=False)
 

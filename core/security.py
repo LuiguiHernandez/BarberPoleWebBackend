@@ -52,4 +52,21 @@ def get_current_user(
     user = db.query(Usuario).filter(Usuario.id == int(user_id)).first()
     if not user:
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
+    if hasattr(user, 'activo') and user.activo is False:
+        raise HTTPException(status_code=403, detail="Cuenta suspendida")
     return user
+
+
+def require_superadmin(current_user=Depends(get_current_user)):
+    """Dependencia que solo permite superadmin."""
+    if not hasattr(current_user, 'rol') or current_user.rol != "superadmin":
+        raise HTTPException(
+            status_code=403,
+            detail="Acceso denegado — se requiere rol de administrador"
+        )
+    return current_user
+
+
+def require_cliente(current_user=Depends(get_current_user)):
+    """Dependencia que permite cliente y superadmin."""
+    return current_user
