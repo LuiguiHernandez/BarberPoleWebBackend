@@ -231,6 +231,10 @@ class Cita(Base):
     estado = Column(Enum(EstadoCita), default=EstadoCita.pendiente)
     notas = Column(Text)
 
+    # Servicios adicionales en la misma cita
+    # JSON: [{"servicio_id": 1, "nombre": "...", "precio": 50000, "duracion_minutos": 30}]
+    servicios_adicionales = Column(Text, nullable=True)  # JSON string
+
     # Origen de la cita
     creada_por_Carlos = Column(Boolean, default=False)
     creada_manualmente = Column(Boolean, default=False)

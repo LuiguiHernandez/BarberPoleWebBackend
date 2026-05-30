@@ -218,6 +218,12 @@ class ClienteResponse(BaseModel):
 
 # ─── CITA ─────────────────────────────────────────────────────────────────────
 
+class ServicioAdicionalItem(BaseModel):
+    servicio_id: int
+    nombre: str
+    precio: float
+    duracion_minutos: int = 30
+
 class CitaCreate(BaseModel):
     cliente_id: Optional[int] = None
     barbero_id: Optional[int] = None
@@ -227,6 +233,7 @@ class CitaCreate(BaseModel):
     cliente_nombre: Optional[str] = None
     cliente_telefono: Optional[str] = None
     fuente: Optional[str] = "admin"
+    servicios_adicionales: Optional[list] = None  # lista de ServicioAdicionalItem
 
 class CitaUpdate(BaseModel):
     barbero_id: Optional[int] = None
@@ -254,6 +261,7 @@ class CitaResponse(BaseModel):
     creada_por_carlos: bool = Field(False, validation_alias='creada_por_Carlos')
     fuente: Optional[str] = "admin"
     gcal_event_id: Optional[str] = None
+    servicios_adicionales: Optional[str] = None  # JSON string
     cliente: Optional[CitaClienteResponse]
     barbero: Optional[BarberoResponse]
     servicio: Optional[ServicioResponse]

@@ -159,6 +159,16 @@ class CitaService:
                 precio = servicio.precio
                 duracion = servicio.duracion_minutos
 
+        # Sumar precio y duración de servicios adicionales
+        servicios_adicionales_json = None
+        if getattr(data, 'servicios_adicionales', None):
+            import json
+            extras = data.servicios_adicionales
+            for extra in extras:
+                precio += extra.get('precio', 0) if isinstance(extra, dict) else getattr(extra, 'precio', 0)
+                duracion += extra.get('duracion_minutos', 30) if isinstance(extra, dict) else getattr(extra, 'duracion_minutos', 30)
+            servicios_adicionales_json = json.dumps(extras, ensure_ascii=False)
+
         cita = Cita(
             negocio_id=negocio_id,
             cliente_id=cliente_id,
@@ -171,6 +181,7 @@ class CitaService:
             estado=EstadoCita.pendiente,
             creada_manualmente=True,
             fuente=getattr(data, "fuente", "admin") or "admin",
+            servicios_adicionales=servicios_adicionales_json,
         )
         self.db.add(cita)
         self.db.commit()
