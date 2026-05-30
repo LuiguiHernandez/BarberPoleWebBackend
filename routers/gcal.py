@@ -107,9 +107,23 @@ def desconectar_gcal(
     negocio = negocio_repo.get_by_usuario_id(current_user.id)
     if not negocio:
         return {"error": "Negocio no encontrado"}
-
     ok = service.desconectar(negocio.id)
     return {"desconectado": ok}
+
+
+@router.post("/desconectar")
+def desconectar_gcal_post(
+    service: GoogleCalendarService = Depends(get_gcal_service),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Desconecta Google Calendar (versión POST para compatibilidad)."""
+    negocio_repo = NegocioRepository(db)
+    negocio = negocio_repo.get_by_usuario_id(current_user.id)
+    if not negocio:
+        return {"error": "Negocio no encontrado"}
+    ok = service.desconectar(negocio.id)
+    return {"ok": ok, "desconectado": ok}
 
 
 # ─── DISPONIBILIDAD ────────────────────────────────────────────────────────────
