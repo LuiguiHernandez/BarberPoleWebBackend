@@ -140,6 +140,13 @@ class GoogleCalendarService:
             inicio = cita.fecha_hora
             fin = inicio + timedelta(minutes=cita.duracion_minutos or 30)
 
+            # Si el datetime no tiene timezone, asumir Bogotá (UTC-5)
+            from datetime import timezone as tz
+            BOG = tz(timedelta(hours=-5))
+            if inicio.tzinfo is None:
+                inicio = inicio.replace(tzinfo=BOG)
+                fin    = fin.replace(tzinfo=BOG)
+
             # Construir descripción del evento
             partes = [f"Servicio: {cita.servicio.nombre}" if cita.servicio else ""]
             if cita.cliente:
