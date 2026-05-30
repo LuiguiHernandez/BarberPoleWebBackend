@@ -116,7 +116,16 @@ class GoogleCalendarService:
                 self.db.commit()
                 logger.info(f"[GCAL] Token refrescado para negocio_id={negocio.id}")
             except Exception as e:
-                logger.error(f"[GCAL] Error refrescando token: {e}")
+                error_str = str(e)
+                if "invalid_grant" in error_str or "Token has been expired or revoked" in error_str:
+                    # Token revocado — marcar como desconectado automáticamente
+                    negocio.gcal_connected     = False
+                    negocio.gcal_access_token  = None
+                    negocio.gcal_refresh_token = None
+                    self.db.commit()
+                    logger.error(f"[GCAL] Token revocado — negocio {negocio.id} desconectado automáticamente. Debe reconectar desde Config → Negocio")
+                else:
+                    logger.error(f"[GCAL] Error refrescando token: {e}")
                 raise
 
         return build("calendar", "v3", credentials=creds, cache_discovery=False)
