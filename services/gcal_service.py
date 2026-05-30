@@ -223,7 +223,7 @@ class GoogleCalendarService:
         try:
             service    = self._get_service(negocio)
             cal_id     = negocio.gcal_calendar_id or "primary"
-            emoji      = estados_emoji.get(cita.estado, "")
+            emoji      = estados_emoji.get(str(cita.estado.value) if hasattr(cita.estado, 'value') else str(cita.estado), "")
             nombre_cli = (cita.cliente.nombre if cita.cliente and cita.cliente.nombre else None) or \
                          (cita.cliente.telefono if cita.cliente else None) or "Cliente"
             nombre_svc = cita.servicio.nombre if cita.servicio else "Cita"

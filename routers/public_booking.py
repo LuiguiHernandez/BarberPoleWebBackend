@@ -472,11 +472,19 @@ def crear_booking(slug: str, data: BookingRequest, db: Session = Depends(get_db)
 
     # Disparar Google Calendar si está conectado
     try:
-        from services.gcal_service import GCalService
-        gcal = GCalService(db)
-        gcal.crear_evento(nueva_cita.id)
-    except Exception:
-        pass  # GCal es opcional — no bloquear la reserva
+        from services.gcal_service import GoogleCalendarService
+        from sqlalchemy.orm import joinedload as jl
+        cita_completa = db.query(Cita).options(
+            jl(Cita.cliente), jl(Cita.servicio), jl(Cita.barbero)
+        ).filter(Cita.id == nueva_cita.id).first()
+        gcal = GoogleCalendarService(db)
+        event_id = gcal.crear_evento(n.id, cita_completa)
+        if event_id:
+            nueva_cita.gcal_event_id = event_id
+            db.commit()
+    except Exception as gcal_err:
+        import logging
+        logging.getLogger(__name__).warning(f"[GCAL] public_booking skip: {gcal_err}")
 
     barbero = db.query(Barbero).filter(Barbero.id == barbero_id).first()
 
