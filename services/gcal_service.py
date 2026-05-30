@@ -104,14 +104,20 @@ class GoogleCalendarService:
             client_id=settings.GCAL_CLIENT_ID,
             client_secret=settings.GCAL_CLIENT_SECRET,
             scopes=SCOPES,
+            # Sin expiry seteado el token se trata como expirado — forzamos refresh
+            expiry=datetime.utcnow() - timedelta(seconds=1),
         )
 
-        # Auto-refresh si el token venció
-        if creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-            negocio.gcal_access_token = creds.token
-            self.db.commit()
-            logger.info(f"[GCAL] Token refrescado para negocio_id={negocio.id}")
+        # Siempre refrescamos para garantizar que el token es válido
+        if creds.refresh_token:
+            try:
+                creds.refresh(Request())
+                negocio.gcal_access_token = creds.token
+                self.db.commit()
+                logger.info(f"[GCAL] Token refrescado para negocio_id={negocio.id}")
+            except Exception as e:
+                logger.error(f"[GCAL] Error refrescando token: {e}")
+                raise
 
         return build("calendar", "v3", credentials=creds, cache_discovery=False)
 
@@ -224,6 +230,8 @@ class GoogleCalendarService:
         except Exception as e:
             logger.warning(f"[GCAL] No se pudo actualizar evento: {e}")
             return False
+
+    def eliminar_evento(self, negocio_id: int, gcal_event_id: str) -> bool:
         """Elimina un evento de Google Calendar (para cancelaciones)."""
         negocio = self.db.query(Negocio).filter(Negocio.id == negocio_id).first()
         if not negocio or not negocio.gcal_connected or not gcal_event_id:
