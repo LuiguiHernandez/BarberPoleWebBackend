@@ -13,3 +13,17 @@ venv/
 
 # Archivos cargados por usuarios
 uploads/
+# Entornos virtuales
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Variables de entorno con credenciales — NUNCA subir al repositorio
+.env
+.env.local
+.env.production
+
+# Archivos de base de datos local
+*.db
+*.sqlite3

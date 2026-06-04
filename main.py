@@ -1,4 +1,6 @@
 import os
+import asyncio
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -32,14 +34,27 @@ from routers.public_booking import router as public_router
 # Crear tablas en Postgres
 Base.metadata.create_all(bind=engine)
 
+# Scheduler en background
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from services.scheduler_service import loop_scheduler
+    task = asyncio.create_task(loop_scheduler())
+    yield
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+
 def custom_generate_unique_id(route: APIRoute):
     return f"{route.name}"
 
 app = FastAPI(
-    title="BarberPole API",
+    title="GestorPro API",
     generate_unique_id_function=custom_generate_unique_id,
-    description="Backend completo para gestión de barberías",
+    description="Backend para gestión de negocios de servicios",
     version="2.0.0",
+    lifespan=lifespan,
 )
 
 # --- CONFIGURACIÓN DE CORS (UNIFICADA) ---

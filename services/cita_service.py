@@ -199,6 +199,30 @@ class CitaService:
         except Exception as e:
             logger.warning(f"[CITA] GCal no disponible (no crítico): {e}")
 
+        # Enviar confirmación por WhatsApp
+        try:
+            import asyncio, json
+            from services.whatsapp_service import WhatsAppService
+            negocio_obj = self.db.query(__import__('models.all_models', fromlist=['Negocio']).Negocio).filter_by(id=negocio_id).first()
+            cliente_obj = cita_completa.cliente if cita_completa else None
+            if cliente_obj and cliente_obj.telefono:
+                wa = WhatsAppService()
+                extras_list = []
+                if cita.servicios_adicionales:
+                    try: extras_list = json.loads(cita.servicios_adicionales)
+                    except: pass
+                asyncio.create_task(wa.confirmar_cita(
+                    telefono       = cliente_obj.telefono,
+                    nombre_cliente = cliente_obj.nombre or "Cliente",
+                    nombre_negocio = negocio_obj.nombre if negocio_obj else "el negocio",
+                    servicio       = cita_completa.servicio.nombre if cita_completa.servicio else "Servicio",
+                    fecha_hora     = cita.fecha_hora,
+                    profesional    = cita_completa.barbero.nombre if cita_completa.barbero else "",
+                    extras         = extras_list,
+                ))
+        except Exception as e:
+            logger.warning(f"[CITA] WhatsApp confirmación no crítico: {e}")
+
         return self.repo.get_con_relaciones(cita.id)
 
     def actualizar(self, usuario_id: int, cita_id: int, data: CitaUpdate) -> Cita:
@@ -258,3 +282,20 @@ class CitaService:
                 gcal.eliminar_evento(negocio_id, cita.gcal_event_id)
             except Exception as e:
                 logger.warning(f"[CITA] No se pudo eliminar evento GCal: {e}")
+
+        # Notificar cancelación por WhatsApp
+        try:
+            import asyncio
+            from services.whatsapp_service import WhatsAppService
+            from models.all_models import Negocio as NegocioModel
+            if cita.cliente and cita.cliente.telefono:
+                negocio_obj = self.db.query(NegocioModel).filter_by(id=negocio_id).first()
+                wa = WhatsAppService()
+                asyncio.create_task(wa.notificar_cancelacion(
+                    telefono = cita.cliente.telefono,
+                    nombre   = cita.cliente.nombre or "Cliente",
+                    servicio = cita.servicio.nombre if cita.servicio else "Servicio",
+                    negocio  = negocio_obj.nombre if negocio_obj else "",
+                ))
+        except Exception as e:
+            logger.warning(f"[CITA] WhatsApp cancelación no crítico: {e}")

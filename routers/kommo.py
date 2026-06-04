@@ -116,3 +116,33 @@ async def enviar_mensaje(
     db.commit()
 
     return {"ok": True}
+
+
+# ── Sincronizar leads de Kommo → GestorPro ────────────────────────
+@router.post("/sincronizar")
+async def sincronizar_kommo(
+    service: KommoService = Depends(get_service),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Sincroniza contactos/leads de Kommo como clientes en GestorPro."""
+    from repositories.negocio_repository import NegocioRepository
+    negocio = NegocioRepository(db).get_by_usuario_id(current_user.id)
+    if not negocio:
+        raise HTTPException(status_code=404, detail="Negocio no encontrado")
+    return await service.sincronizar_citas_desde_kommo(negocio.id)
+
+
+# ── Stats de Kommo para Informes ──────────────────────────────────
+@router.get("/stats")
+async def stats_kommo(
+    service: KommoService = Depends(get_service),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Devuelve métricas de Kommo para mostrar en el panel de Informes."""
+    from repositories.negocio_repository import NegocioRepository
+    negocio = NegocioRepository(db).get_by_usuario_id(current_user.id)
+    if not negocio:
+        raise HTTPException(status_code=404, detail="Negocio no encontrado")
+    return await service.obtener_stats_kommo(negocio.id)

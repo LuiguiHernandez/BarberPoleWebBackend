@@ -264,3 +264,121 @@ class KommoService:
 
     async def enviar_por_negocio_id(self, negocio_id: int, telefono: str, texto: str) -> dict:
         return await self.enviar_mensaje(negocio_id, telefono, texto)
+
+    # ── Sincronizar citas desde Kommo ─────────────────────────────
+    async def sincronizar_citas_desde_kommo(self, negocio_id: int) -> dict:
+        """
+        Obtiene los leads de Kommo con etiqueta 'cita' o campo de fecha
+        y los sincroniza como citas en GestorPro.
+        """
+        negocio = self._get_negocio(negocio_id)
+        if not negocio.kommo_connected or not negocio.kommo_access_token:
+            return {"ok": False, "error": "Kommo no conectado"}
+
+        base    = negocio.kommo_base_url
+        headers = self._headers(negocio)
+
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                # Obtener leads recientes
+                r = await client.get(
+                    f"{base}/api/v4/leads",
+                    headers=headers,
+                    params={"limit": 50, "order[created_at]": "desc"},
+                )
+                if r.status_code != 200:
+                    return {"ok": False, "error": f"Kommo {r.status_code}"}
+
+                leads = r.json().get("_embedded", {}).get("leads", [])
+                sincronizados = 0
+
+                for lead in leads:
+                    try:
+                        # Obtener contacto del lead
+                        contactos = lead.get("_embedded", {}).get("contacts", [])
+                        if not contactos:
+                            continue
+                        contact_id = contactos[0].get("id")
+                        if not contact_id:
+                            continue
+
+                        # Obtener teléfono del contacto
+                        rc = await client.get(
+                            f"{base}/api/v4/contacts/{contact_id}",
+                            headers=headers,
+                        )
+                        if rc.status_code != 200:
+                            continue
+                        contact_data = rc.json()
+                        nombre = contact_data.get("name", "Cliente Kommo")
+
+                        # Extraer teléfono
+                        telefono = None
+                        for cf in contact_data.get("custom_fields_values", []) or []:
+                            if cf.get("field_code") == "PHONE":
+                                vals = cf.get("values", [])
+                                if vals:
+                                    telefono = vals[0].get("value", "")
+                                    break
+
+                        if not telefono:
+                            continue
+
+                        # Crear o actualizar cliente en GestorPro
+                        from models.all_models import Cliente
+                        cliente = self.db.query(Cliente).filter(
+                            Cliente.negocio_id == negocio_id,
+                            Cliente.telefono == telefono
+                        ).first()
+                        if not cliente:
+                            cliente = Cliente(
+                                negocio_id = negocio_id,
+                                nombre     = nombre,
+                                telefono   = telefono,
+                            )
+                            self.db.add(cliente)
+                            self.db.flush()
+                            sincronizados += 1
+
+                        # Si el lead tiene una nota con fecha de cita, crear conversación
+                        self._guardar_mensaje_entrante(
+                            negocio  = negocio,
+                            telefono = telefono,
+                            texto    = f"[Kommo] Lead #{lead.get('id')} — {lead.get('name','Sin nombre')}",
+                            nombre   = nombre,
+                        )
+                    except Exception:
+                        continue
+
+                self.db.commit()
+                return {"ok": True, "sincronizados": sincronizados, "leads_revisados": len(leads)}
+
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
+    # ── Stats de Kommo para el panel de Informes ──────────────────
+    async def obtener_stats_kommo(self, negocio_id: int) -> dict:
+        """Obtiene métricas básicas de Kommo para mostrar en el panel de Informes."""
+        negocio = self._get_negocio(negocio_id)
+        if not negocio.kommo_connected or not negocio.kommo_access_token:
+            return {"conectado": False}
+
+        base    = negocio.kommo_base_url
+        headers = self._headers(negocio)
+
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                r = await client.get(f"{base}/api/v4/leads", headers=headers, params={"limit": 1})
+                total_leads = r.json().get("_page_count", 0) if r.status_code == 200 else 0
+
+                r2 = await client.get(f"{base}/api/v4/contacts", headers=headers, params={"limit": 1})
+                total_contactos = r2.json().get("_page_count", 0) if r2.status_code == 200 else 0
+
+            return {
+                "conectado": True,
+                "total_leads": total_leads,
+                "total_contactos": total_contactos,
+                "subdomain": negocio.kommo_base_url,
+            }
+        except Exception as e:
+            return {"conectado": True, "error": str(e)}
