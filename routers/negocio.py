@@ -122,3 +122,30 @@ def get_tema_actual(
             for k, v in TEMAS.items()
         ]
     }
+
+
+# ── Plan y suscripción ─────────────────────────────────────────────────────────
+@router.get("/plan")
+def estado_plan(
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Retorna el estado actual del plan del negocio.
+
+    Response:
+      {
+        "plan": "trial" | "activo" | "suspendido",
+        "activo": bool,
+        "dias_restantes": int | null,
+        "vencido": bool,
+        "mensaje": str,
+        "plan_expira_en": datetime | null
+      }
+    """
+    from repositories.negocio_repository import NegocioRepository
+    from services.plan_service import get_estado_plan
+    negocio = NegocioRepository(db).get_by_usuario_id(current_user.id)
+    if not negocio:
+        raise HTTPException(status_code=404, detail="Negocio no encontrado")
+    return get_estado_plan(negocio)

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from core.config import settings
 from core.database import get_db
-from core.security import get_current_user
+from core.security import get_current_user, require_plan_activo
 from services.gcal_service import GoogleCalendarService
 from repositories.negocio_repository import NegocioRepository
 

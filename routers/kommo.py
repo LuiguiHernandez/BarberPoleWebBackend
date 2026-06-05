@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from core.database import get_db
-from core.security import get_current_user
+from core.security import get_current_user, require_plan_activo
 from services.kommo_service import KommoService
 
 router = APIRouter()

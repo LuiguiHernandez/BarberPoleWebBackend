@@ -159,3 +159,47 @@ def require_cliente(current_user=Depends(get_current_user)):
     Alias semántico de get_current_user, permite cliente y superadmin.
     """
     return current_user
+
+
+def require_plan_activo(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Dependencia para endpoints que requieren plan trial vigente o plan activo.
+
+    Permite el acceso si:
+      - El negocio está en trial y no ha vencido
+      - El negocio tiene plan activo (pagado)
+      - El usuario es superadmin (siempre tiene acceso)
+
+    Bloquea el acceso si:
+      - El trial venció
+      - El plan está suspendido
+
+    Uso en routers:
+        @router.post("/gcal/conectar")
+        def conectar(user = Depends(require_plan_activo)):
+            ...
+    """
+    # Los superadmin siempre tienen acceso total
+    if hasattr(current_user, 'rol') and current_user.rol == "superadmin":
+        return current_user
+
+    from repositories.negocio_repository import NegocioRepository
+    from services.plan_service import get_estado_plan
+    negocio = NegocioRepository(db).get_by_usuario_id(current_user.id)
+    if not negocio:
+        raise HTTPException(status_code=404, detail="Negocio no encontrado")
+
+    estado = get_estado_plan(negocio)
+    if not estado["activo"]:
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "error": "plan_requerido",
+                "mensaje": estado["mensaje"],
+                "plan": estado["plan"],
+            }
+        )
+    return current_user

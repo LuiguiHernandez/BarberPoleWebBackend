@@ -97,7 +97,15 @@ class Negocio(Base):
     color_secundario  = Column(String(7),  default="#E8F5EE")
     color_fondo       = Column(String(7),  default="#FFFFFF")
     color_texto       = Column(String(7),  default="#111827")
-    url_web           = Column(String(300), nullable=True)       # URL del sitio asociado (Juan)
+    url_web           = Column(String(300), nullable=True)
+
+    # ── Plan y suscripción ────────────────────────────────────────────────────
+    # plan: 'trial' | 'activo' | 'suspendido'
+    plan              = Column(String(20), default="trial", nullable=False)
+    # Fecha en que expira el trial o la suscripción activa
+    plan_expira_en    = Column(DateTime(timezone=True), nullable=True)
+    # Fecha del último pago (para tracking)
+    ultimo_pago       = Column(DateTime(timezone=True), nullable=True)
 
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
     actualizado_en = Column(DateTime(timezone=True), onupdate=func.now())

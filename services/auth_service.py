@@ -33,7 +33,11 @@ class AuthService:
 
         # Aplicar colores del tema según el tipo de negocio
         from core.temas import TEMAS
+        from datetime import datetime, timedelta, timezone
         tema = TEMAS.get(data.tipo_negocio or "general", TEMAS["general"])
+
+        # Trial expira en 30 días desde el registro
+        trial_expira = datetime.now(timezone.utc) + timedelta(days=30)
 
         usuario = Usuario(
             nombre=data.nombre.strip(),
@@ -55,6 +59,8 @@ class AuthService:
             color_secundario=tema.get("color_secundario", "#E8F5EE"),
             color_fondo=tema.get("color_fondo", "#FFFFFF"),
             color_texto=tema.get("color_texto", "#111827"),
+            plan="trial",
+            plan_expira_en=trial_expira,
         )
         self.db.add(negocio)
         self.db.flush()
