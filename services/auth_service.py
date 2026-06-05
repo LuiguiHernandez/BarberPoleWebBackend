@@ -10,44 +10,92 @@ class AuthService:
         self.db = db
 
     def register(self, data: RegisterRequest) -> TokenResponse:
-        if self.db.query(Usuario).filter(Usuario.email == data.email).first():
-            raise HTTPException(status_code=400, detail="El email ya está registrado")
+        # Validaciones básicas
+        if len(data.password) < 6:
+            raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres")
+        if not data.nombre.strip():
+            raise HTTPException(status_code=400, detail="El nombre es obligatorio")
+        if not data.nombre_negocio.strip():
+            raise HTTPException(status_code=400, detail="El nombre del negocio es obligatorio")
+
+        # Email único
+        if self.db.query(Usuario).filter(Usuario.email == data.email.lower().strip()).first():
+            raise HTTPException(status_code=400, detail="Este email ya está registrado")
+
+        # Generar slug único para el negocio
+        import re
+        base_slug = re.sub(r'[^a-z0-9]+', '-', data.nombre_negocio.lower().strip()).strip('-')
+        slug = base_slug
+        contador = 1
+        while self.db.query(Negocio).filter(Negocio.slug == slug).first():
+            slug = f"{base_slug}-{contador}"
+            contador += 1
+
+        # Aplicar colores del tema según el tipo de negocio
+        from core.temas import TEMAS
+        tema = TEMAS.get(data.tipo_negocio or "general", TEMAS["general"])
 
         usuario = Usuario(
-            nombre=data.nombre,
-            email=data.email,
+            nombre=data.nombre.strip(),
+            email=data.email.lower().strip(),
             password_hash=hash_password(data.password),
+            rol="cliente",
+            activo=True,
         )
         self.db.add(usuario)
         self.db.flush()
 
         negocio = Negocio(
             usuario_id=usuario.id,
-            nombre=data.nombre_negocio,
-            slug=data.nombre_negocio.lower().replace(" ", "-"),
+            nombre=data.nombre_negocio.strip(),
+            slug=slug,
+            tipo_negocio=data.tipo_negocio or "general",
+            telefono=data.telefono_negocio,
+            color_primario=tema.get("color_primario", "#00A86B"),
+            color_secundario=tema.get("color_secundario", "#E8F5EE"),
+            color_fondo=tema.get("color_fondo", "#FFFFFF"),
+            color_texto=tema.get("color_texto", "#111827"),
         )
         self.db.add(negocio)
         self.db.flush()
 
+        # Horarios por defecto: lunes a sábado 9am-6pm, domingo cerrado
         dias_laborales = {
             DiaSemana.lunes, DiaSemana.martes, DiaSemana.miercoles,
             DiaSemana.jueves, DiaSemana.viernes, DiaSemana.sabado,
         }
         for dia in DiaSemana:
-            horario = Horario(
+            self.db.add(Horario(
                 negocio_id=negocio.id,
                 dia=dia,
                 abierto=dia in dias_laborales,
                 hora_inicio="09:00",
                 hora_fin="18:00",
-            )
-            self.db.add(horario)
+            ))
 
         self.db.commit()
         self.db.refresh(usuario)
 
+        # Tokens de sesión
         token         = create_access_token({"sub": str(usuario.id)})
         refresh_token = create_refresh_token({"sub": str(usuario.id)})
+
+        # Enviar email de bienvenida con verificación (async — no bloquea la respuesta)
+        try:
+            import asyncio
+            from routers.password_reset import crear_token_verificacion
+            from services.email_service import send_email, html_bienvenida
+            from core.config import settings
+            token_verificacion = crear_token_verificacion(usuario.id)
+            link = f"{settings.FRONTEND_URL.rstrip('/')}/verify-email?token={token_verificacion}"
+            asyncio.create_task(send_email(
+                to=usuario.email,
+                subject=f"¡Bienvenido a GestorPro, {usuario.nombre}!",
+                html=html_bienvenida(usuario.nombre, negocio.nombre, link),
+            ))
+        except Exception:
+            pass  # El email es opcional — no bloquea el registro
+
         return TokenResponse(
             access_token=token,
             refresh_token=refresh_token,

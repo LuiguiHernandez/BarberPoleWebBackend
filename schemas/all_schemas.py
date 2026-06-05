@@ -18,10 +18,15 @@ class TokenResponse(BaseModel):
     negocio_slug: Optional[str] = None
 
 class RegisterRequest(BaseModel):
+    # Datos del dueño
     nombre: str
     email: str
     password: str
+    telefono: Optional[str] = None
+    # Datos del negocio
     nombre_negocio: str
+    tipo_negocio: Optional[str] = "general"   # spa, barberia, medico, etc.
+    telefono_negocio: Optional[str] = None
 
 # ─── NEGOCIO ──────────────────────────────────────────────────────────────────
 
