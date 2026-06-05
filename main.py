@@ -1,3 +1,6 @@
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import os
 import asyncio
 from contextlib import asynccontextmanager
@@ -14,6 +17,7 @@ from models import Usuario, Negocio, Servicio, Barbero, Horario, Cliente, Cita, 
 
 # Routers
 from routers.auth import router as auth_router
+from routers.password_reset import router as password_reset_router
 from routers.citas import router as citas_router
 from routers.negocio import router as negocio_router
 from routers.servicios import router as servicios_router
@@ -57,6 +61,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Rate limiting
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # --- CONFIGURACIÓN DE CORS (UNIFICADA) ---
 origins = [
     "http://167.172.145.102",
@@ -86,6 +95,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # --- INCLUSIÓN DE ROUTERS CON PREFIJO /API ---
 # Aseguramos que todos coincidan con las llamadas de Axios en el Front
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
+app.include_router(password_reset_router)
 app.include_router(citas_router, prefix="/api/citas", tags=["Citas"])
 app.include_router(negocio_router, prefix="/api/negocio", tags=["Negocio"])
 app.include_router(servicios_router, prefix="/api/servicios", tags=["Servicios"])

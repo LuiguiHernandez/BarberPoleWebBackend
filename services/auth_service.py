@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from models.all_models import Usuario, Negocio, Horario, DiaSemana
 from schemas.all_schemas import RegisterRequest, LoginRequest, TokenResponse
-from core.security import hash_password, verify_password, create_access_token
+from core.security import hash_password, verify_password, create_access_token, create_refresh_token
 
 
 class AuthService:
@@ -46,9 +46,11 @@ class AuthService:
         self.db.commit()
         self.db.refresh(usuario)
 
-        token = create_access_token({"sub": str(usuario.id)})
+        token         = create_access_token({"sub": str(usuario.id)})
+        refresh_token = create_refresh_token({"sub": str(usuario.id)})
         return TokenResponse(
             access_token=token,
+            refresh_token=refresh_token,
             usuario_nombre=usuario.nombre,
             negocio_nombre=negocio.nombre,
             negocio_slug=negocio.slug,
@@ -59,10 +61,35 @@ class AuthService:
         if not usuario or not verify_password(data.password, usuario.password_hash):
             raise HTTPException(status_code=401, detail="Credenciales incorrectas")
 
-        token = create_access_token({"sub": str(usuario.id)})
+        token         = create_access_token({"sub": str(usuario.id)})
+        refresh_token = create_refresh_token({"sub": str(usuario.id)})
         negocio = usuario.negocio
         return TokenResponse(
             access_token=token,
+            refresh_token=refresh_token,
+            usuario_nombre=usuario.nombre,
+            negocio_nombre=negocio.nombre if negocio else None,
+            negocio_slug=negocio.slug if negocio else None,
+        )
+
+    def refresh(self, refresh_token: str) -> TokenResponse:
+        """Genera un nuevo access_token a partir de un refresh_token válido."""
+        from core.security import decode_token
+        payload = decode_token(refresh_token)
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Token inválido")
+
+        user_id = payload.get("sub")
+        usuario = self.db.query(Usuario).filter(Usuario.id == int(user_id)).first()
+        if not usuario:
+            raise HTTPException(status_code=401, detail="Usuario no encontrado")
+
+        new_access  = create_access_token({"sub": str(usuario.id)})
+        new_refresh = create_refresh_token({"sub": str(usuario.id)})
+        negocio = usuario.negocio
+        return TokenResponse(
+            access_token=new_access,
+            refresh_token=new_refresh,
             usuario_nombre=usuario.nombre,
             negocio_nombre=negocio.nombre if negocio else None,
             negocio_slug=negocio.slug if negocio else None,

@@ -13,7 +13,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from sqlalchemy.orm import Session
 
-from core.config import settings
+from core.config import settings, encrypt_token, decrypt_token
 from models.all_models import Negocio, Cita
 
 logger = logging.getLogger(__name__)
@@ -68,8 +68,8 @@ class GoogleCalendarService:
             if not negocio:
                 return False
 
-            negocio.gcal_access_token  = tokens.get("access_token")
-            negocio.gcal_refresh_token = tokens.get("refresh_token")
+            negocio.gcal_access_token  = encrypt_token(tokens.get("access_token", ""))
+            negocio.gcal_refresh_token = encrypt_token(tokens.get("refresh_token", ""))
             negocio.gcal_connected     = True
             self.db.commit()
             logger.info(f"[GCAL] Tokens guardados para negocio_id={negocio_id}")
@@ -98,8 +98,8 @@ class GoogleCalendarService:
             raise ValueError("Negocio no tiene Google Calendar conectado")
 
         creds = Credentials(
-            token=negocio.gcal_access_token,
-            refresh_token=negocio.gcal_refresh_token,
+            token=decrypt_token(negocio.gcal_access_token),
+            refresh_token=decrypt_token(negocio.gcal_refresh_token),
             token_uri="https://oauth2.googleapis.com/token",
             client_id=settings.GCAL_CLIENT_ID,
             client_secret=settings.GCAL_CLIENT_SECRET,
@@ -112,7 +112,7 @@ class GoogleCalendarService:
         if creds.refresh_token:
             try:
                 creds.refresh(Request())
-                negocio.gcal_access_token = creds.token
+                negocio.gcal_access_token = encrypt_token(creds.token)
                 self.db.commit()
                 logger.info(f"[GCAL] Token refrescado para negocio_id={negocio.id}")
             except Exception as e:

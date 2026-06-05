@@ -32,8 +32,11 @@ class Settings(BaseSettings):
     GCAL_REDIRECT_URI: str = "http://167.172.145.102:8000/api/gcal/callback"
 
     # App
-    APP_NAME: str = "BarberPole"
+    APP_NAME: str = "GestorPro"
     DEBUG: bool = True
+
+    # Cifrado de tokens OAuth (genera con: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+    ENCRYPTION_KEY: str = ""
 
     # --- LA CORRECCIÓN ESTÁ AQUÍ ---
     model_config = SettingsConfigDict(
@@ -42,3 +45,38 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
+# Instancia global del cifrador (se inicializa lazy)
+_fernet = None
+
+def get_fernet():
+    """Retorna instancia Fernet para cifrar/descifrar tokens OAuth."""
+    global _fernet
+    if _fernet is None:
+        from cryptography.fernet import Fernet
+        key = settings.ENCRYPTION_KEY
+        if not key:
+            # En desarrollo sin clave, generar una temporal (no apta para producción)
+            import logging
+            logging.getLogger(__name__).warning(
+                "[SECURITY] ENCRYPTION_KEY no configurada — usando clave temporal. "
+                "Configura ENCRYPTION_KEY en .env para producción."
+            )
+            key = Fernet.generate_key().decode()
+        _fernet = Fernet(key.encode() if isinstance(key, str) else key)
+    return _fernet
+
+def encrypt_token(token: str) -> str:
+    """Cifra un token OAuth antes de guardarlo en BD."""
+    if not token:
+        return token
+    return get_fernet().encrypt(token.encode()).decode()
+
+def decrypt_token(token: str) -> str:
+    """Descifra un token OAuth al leerlo de BD."""
+    if not token:
+        return token
+    try:
+        return get_fernet().decrypt(token.encode()).decode()
+    except Exception:
+        # Si falla el descifrado, el token puede estar en texto plano (migración)
+        return token
