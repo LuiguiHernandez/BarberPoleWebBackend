@@ -1,4 +1,25 @@
 """
+services/scheduler_service.py
+─────────────────────────────
+Tareas programadas que corren en background desde el inicio de la app.
+
+El scheduler se inicia en main.py usando el mecanismo lifespan de FastAPI:
+
+    @asynccontextmanager
+    async def lifespan(app):
+        task = asyncio.create_task(loop_scheduler())
+        yield
+        task.cancel()
+
+Tareas activas:
+  - job_recordatorios(): corre cada 15 minutos.
+    Busca citas que empiecen en ~2 horas y envía WhatsApp de recordatorio.
+    Ventana de búsqueda: ±15 minutos alrededor de "ahora + 2h".
+
+  - job_resumen_diario(): corre una vez al día a las 7:30am hora Colombia.
+    Envía al número del negocio la lista de citas del día con total estimado.
+
+Horario de Colombia: ZoneInfo("America/Bogota") — UTC-5
 SchedulerService — Tareas programadas
 - Recordatorios WhatsApp 2h antes de cada cita
 - Resumen diario al dueño del negocio a las 7:30am

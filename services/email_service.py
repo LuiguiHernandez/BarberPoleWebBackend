@@ -1,4 +1,29 @@
 """
+services/email_service.py
+─────────────────────────
+Servicio de emails transaccionales vía Resend API.
+
+Resend es un servicio de envío de emails (resend.com).
+Plan gratuito: 3.000 emails/mes.
+
+Configuración:
+  RESEND_API_KEY en .env → envía emails reales
+  Sin RESEND_API_KEY    → imprime en logs (modo desarrollo)
+
+Emails que se envían actualmente:
+  1. Recuperación de contraseña: html_recuperar_password()
+     → Se dispara desde routers/password_reset.py
+     → Contiene un link con token que expira en 1 hora
+
+  2. Bienvenida al registrarse: html_bienvenida()
+     → Pendiente de conectar al flujo de registro
+     → Contiene link de verificación de email (24h)
+
+Para agregar un nuevo tipo de email:
+  1. Crear una función html_*() que retorne el HTML del email
+  2. Llamar a send_email(to, subject, html_*()) desde el servicio correspondiente
+"""
+"""
 EmailService — Envío de emails transaccionales via Resend
 Requiere RESEND_API_KEY en .env
 """
