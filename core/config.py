@@ -38,6 +38,12 @@ class Settings(BaseSettings):
     # Cifrado de tokens OAuth (genera con: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
     ENCRYPTION_KEY: str = ""
 
+    # Email transaccional — Resend (resend.com)
+    # Sin RESEND_API_KEY: los emails solo se imprimen en los logs (modo desarrollo)
+    # Con RESEND_API_KEY: se envían emails reales
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM: str = "GestorPro <noreply@gestorpro.app>"
+
     # --- LA CORRECCIÓN ESTÁ AQUÍ ---
     model_config = SettingsConfigDict(
         env_file=".env",
