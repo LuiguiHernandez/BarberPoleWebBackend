@@ -32,6 +32,7 @@ from routers.webhooks import router as webhook_router
 from routers.categorias import router as categorias_router
 from routers.gcal import router as gcal_router
 from routers.kommo import router as kommo_router
+from routers.wompi import router as wompi_router
 from routers.admin import router as admin_router
 from routers.public_booking import router as public_router
 
@@ -110,6 +111,7 @@ app.include_router(webhook_router, prefix="/api/webhooks", tags=["Webhooks"])
 app.include_router(categorias_router, prefix="/api/categorias", tags=["Categorías"])
 app.include_router(gcal_router,   prefix="/api/gcal",   tags=["Google Calendar"])
 app.include_router(kommo_router,  prefix="/api/kommo",  tags=["Kommo CRM"])
+app.include_router(wompi_router)
 app.include_router(admin_router,  prefix="/api/admin",  tags=["Admin"])
 app.include_router(public_router, prefix="/api/public", tags=["Booking Público"])
 

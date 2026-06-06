@@ -44,6 +44,15 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     EMAIL_FROM: str = "GestorPro <noreply@gestorpro.app>"
 
+    # Wompi — pasarela de pagos Colombia (obtener en comercios.wompi.co)
+    # Sandbox:    pub_stagtest_xxx  /  prv_stagtest_xxx
+    # Producción: pub_prod_xxx      /  prv_prod_xxx
+    WOMPI_PUBLIC_KEY: str = ""
+    WOMPI_PRIVATE_KEY: str = ""
+    WOMPI_EVENTS_SECRET: str = ""       # Para verificar firma de webhooks
+    WOMPI_INTEGRITY_SECRET: str = ""    # Para generar hash del widget
+    WOMPI_PRECIO_CENTS: int = 25000000  # $250.000 COP = 25.000.000 centavos
+
     # --- LA CORRECCIÓN ESTÁ AQUÍ ---
     model_config = SettingsConfigDict(
         env_file=".env",
